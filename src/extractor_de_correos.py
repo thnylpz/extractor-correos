@@ -15,6 +15,8 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
+from colorama import init, Fore
+
 # === Funciones auxiliares ===
 def limpiar_texto(nombre):
     """Limpia nombres de archivo sin eliminar la extensión."""
@@ -252,12 +254,8 @@ PERSONAL_LIMPIO = {
 
 # === Script principal ===
 def exportar_correos():
-    
-    # Códigos ANSI básicos
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    YELLOW = "\033[33m"
-    RESET = "\033[0m"  # Para volver al color por defecto
+    # Inicializa colorama
+    init(autoreset=True)  # autoreset=True hace que después de cada print el color vuelva al normal
 
     while True:
         print("=== Exportador de Correos con Anexos ===", end="\n\n")
@@ -477,13 +475,12 @@ def exportar_correos():
             ws.sheet_view.zoomScale = 85 # Ajustar zoom
             wb.save(ruta_excel)
 
-            # print(f"\n\nExportación completada correctamente: {len(registros)} correos.")
-            print(f"{GREEN}\n\nExportación completada correctamente: {len(registros)} correos.{RESET}")
+            print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} correos.")
             input("\nPresione ENTER para ver los correos.")
             os.system("cls")
             os.startfile(carpeta_base)
         else:
-            print("\nNo se encontraron correos en el rango especificado.")
+            print(Fore.YELLOW + "\nNo se encontraron correos en el rango especificado.")
             input("\nPresione ENTER para continuar.")
             os.system("cls")
 
