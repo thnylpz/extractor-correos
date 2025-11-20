@@ -20,6 +20,7 @@ echo Python detectado correctamente.
 echo.
 cls
 
+cd /d "%~dp0\.."
 REM --- Instalar dependencias ---
 echo Instalando dependencias
 echo.
@@ -29,7 +30,9 @@ IF EXIST requirements.txt (
 )
 cls
 
+cd /d "%~dp0\..\src"
 REM --- Ejecutar el script principal ---
 python extractor_de_correos.py
 
 pause
+
