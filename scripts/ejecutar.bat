@@ -7,13 +7,11 @@ REM --- Actualizar desde Github ---
 git pull
 cls
 
-@REM cd /d "%~dp0\..\utils"
 REM --- Verificar si Python está instalado ---
 python --version >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
     echo ERROR: Python no esta instalado en esta PC.
     echo Por favor instala Python desde: https://www.python.org/downloads/
-    @REM winget install Python.Python.3.13
     pause
     exit /b
 )
