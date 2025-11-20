@@ -42,10 +42,12 @@ REM --- Ejecutar el script principal ---
 echo Ejecutando el programa...
 echo ============================================
 echo.
-
+@echo off
 python extractor_de_correos.py
 
 echo.
 echo ============================================
 echo Tarea finalizada. Puede cerrar esta ventana.
+@echo off
 pause
+
