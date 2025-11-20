@@ -1,7 +1,7 @@
 @echo off
 
 REM --- Ir a la carpeta donde está el BAT ---
-cd /d "%~dp0"
+cd /d "%~dp0\..\src"
 
 REM --- Actualizar desde Github ---
 git pull
@@ -31,3 +31,5 @@ cls
 
 REM --- Ejecutar el script principal ---
 python extractor_de_correos.py
+
+pause
