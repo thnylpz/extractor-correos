@@ -252,6 +252,13 @@ PERSONAL_LIMPIO = {
 
 # === Script principal ===
 def exportar_correos():
+    
+    # Códigos ANSI básicos
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    RESET = "\033[0m"  # Para volver al color por defecto
+
     while True:
         print("=== Exportador de Correos con Anexos ===", end="\n\n")
 
@@ -470,7 +477,8 @@ def exportar_correos():
             ws.sheet_view.zoomScale = 85 # Ajustar zoom
             wb.save(ruta_excel)
 
-            print(f"\n\nExportación completada correctamente: {len(registros)} correos.")
+            # print(f"\n\nExportación completada correctamente: {len(registros)} correos.")
+            print(f"{GREEN}\n\nExportación completada correctamente: {len(registros)} correos.{RESET}")
             input("\nPresione ENTER para ver los correos.")
             os.system("cls")
             os.startfile(carpeta_base)
