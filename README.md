@@ -40,7 +40,7 @@ extractor-correos/
 
 ### En Windows:
 
-1. **Outlook instalado**
+1. **Outlook (classic) instalado** y con sesión iniciada
 2. **Python 3.10 o superior**  
    Descargar en: https://www.python.org/downloads/  
    *Activar “Add Python to PATH” durante la instalación.*
@@ -56,4 +56,5 @@ extractor-correos/
 3. Ejecutar:
 
 ```bash
-git clone https://github.com/TU_USUARIO/extractor-correos.git
+git clone https://github.com/thnylpz/extractor-correos.git
+
