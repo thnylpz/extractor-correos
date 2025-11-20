@@ -20,7 +20,7 @@ echo Python detectado correctamente.
 echo.
 cls
 
-cd /d "%~dp0\.."
+cd /d "%~dp0\..\docs"
 REM --- Instalar dependencias ---
 echo Instalando dependencias
 echo.
@@ -35,4 +35,5 @@ REM --- Ejecutar el script principal ---
 python extractor_de_correos.py
 
 pause
+
 
