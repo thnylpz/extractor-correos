@@ -480,7 +480,7 @@ def exportar_correos():
             os.system("cls")
             os.startfile(carpeta_base)
         else:
-            print(Fore.YELLOW + "\nNo se encontraron correos en el rango especificado.")
+            print(Fore.RED + "\nNo se encontraron correos en el rango especificado.")
             input("\nPresione ENTER para continuar.")
             os.system("cls")
 
