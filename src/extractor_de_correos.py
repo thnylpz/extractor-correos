@@ -472,7 +472,7 @@ def exportar_correos():
             )
             tabla.tableStyleInfo = estilo
             ws.add_table(tabla)
-            ws.sheet_view.zoomScale = 85 # Ajustar zoom
+            ws.sheet_view.zoomScale = 80 # Ajustar zoom
             wb.save(ruta_excel)
 
             print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} correos.")
