@@ -42,4 +42,6 @@ Está diseñado especialmente para que pueda ser usado por personas sin conocimi
 3. Ejecutar:
 
 cd Documents
+
 git clone https://github.com/thnylpz/extractor-correos.git
+
