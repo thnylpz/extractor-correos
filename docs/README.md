@@ -40,8 +40,12 @@ Está diseñado especialmente para que pueda ser usado por personas sin conocimi
 1. Instalar Python y Git.
 2. Abrir CMD (o símbolo del sistema).
 3. Ejecutar:
+   
+"cd Documents"
 
-cd Documents
-git clone https://github.com/thnylpz/extractor-correos.git
+y luego:
+
+"git clone https://github.com/thnylpz/extractor-correos.git"
+
 
 
