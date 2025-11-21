@@ -329,8 +329,9 @@ def exportar_correos():
         # print(fecha_inicio_raw.strftime('%d/%m/%Y %H:%M'))
         # print(fecha_fin_raw.strftime('%d/%m/%Y %H:%M'))
         
-        items_filtrados = carpeta.Items.Restrict(filtro)
-        items_filtrados.Sort("[ReceivedTime]", True)
+        items = carpeta.Items
+        items.Sort("[ReceivedTime]", True)   # True = descendente, False = ascendente
+        items_filtrados = items.Restrict(filtro)
         
         word = win32com.client.Dispatch("Word.Application")
         word.Visible = False
@@ -523,9 +524,6 @@ def exportar_correos():
             os.system("cls")
 
 # def prueba():
-#     texto_prueba = 'FÓRMULA POLINÓMICA PARA EL PROCESO Nro. COTO-UG-2025-003, CUYO OBJETO ES "REPOTENCIACIÓN DE LAS ÁREAS SOCIALES Y DEPORTIVAS DE LA FACULTAD DE PSICOLOGÍA DE LA UNIVERSIDAD DE GUAYAQUIL"'
-#     texto_limpio = limpiar_texto(texto_prueba)
-#     print("\n\n\n" + texto_limpio)
 #     input()
     
 
