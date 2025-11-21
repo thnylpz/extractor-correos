@@ -23,12 +23,28 @@ def limpiar_texto(nombre):
     if not nombre:
         return ""
     nombre = str(nombre).strip()
+    
+    # Detectar extensión válida (opcional)
+    m = re.match(r"(.+)\.([A-Za-z0-9]{1,5})$", nombre)
+    if m:
+        base, ext = m.group(1), "." + m.group(2).lower()
+    else:
+        base, ext = nombre, ""
 
     # Separar nombre y extensión
-    base, ext = os.path.splitext(nombre)
+    # base, ext = os.path.splitext(nombre)
 
     # Reemplazar caracteres inválidos solo en la parte base
-    base = re.sub(r'[\\/:\*\?"<>\|\r\n\t]', "_", base)
+    # base = re.sub(r'[\\/:\*\?"<>\|\r\n\t]', "_", base)
+    
+    # Reemplazar caracteres inválidos + comillas Unicode
+    base = re.sub(
+        r'[\\/:*?"<>|\r\n\t“”‘’´`]',
+        "_",
+        base
+    )
+    
+    # Normalizar espacios
     base = re.sub(r'\s+', " ", base)
     base = base.strip()
 
@@ -266,7 +282,7 @@ PERSONAL_LIMPIO = {
 def exportar_correos():
     # Inicializa colorama
     init(autoreset=True)  # autoreset=True hace que después de cada print el color vuelva al normal
-
+    
     while True:
         print("=== Exportador de Correos con Anexos ===", end="\n\n")
 
@@ -501,6 +517,14 @@ def exportar_correos():
             input("\nPresione ENTER para continuar.")
             os.system("cls")
 
+# def prueba():
+#     texto_prueba = 'FÓRMULA POLINÓMICA PARA EL PROCESO Nro. COTO-UG-2025-003, CUYO OBJETO ES "REPOTENCIACIÓN DE LAS ÁREAS SOCIALES Y DEPORTIVAS DE LA FACULTAD DE PSICOLOGÍA DE LA UNIVERSIDAD DE GUAYAQUIL"'
+#     texto_limpio = limpiar_texto(texto_prueba)
+#     print("\n\n\n" + texto_limpio)
+#     input()
+    
+
 if __name__ == "__main__":
     exportar_correos()
+    # prueba()
 
