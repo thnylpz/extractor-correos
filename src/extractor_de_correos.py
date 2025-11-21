@@ -145,6 +145,16 @@ def limpiar_nombre(nombre):
 def nompropio_python(asunto):
     return asunto.title()
 
+def limpiar_destinatarios(cadena_to: str) -> str:
+    if not cadena_to:
+        return ""
+    
+    # Outlook suele devolver algo como: "Juan <juan@mail.com>; Maria <maria@mail.com>"
+    partes = [p.strip() for p in cadena_to.split(";") if p.strip()]
+    
+    # Unir con salto de línea
+    return "\n".join(partes)
+
 PERSONAL_INFO = {
     # Dirección DIOU
     "Arq. Belty Espinoza Santos": {
@@ -266,14 +276,19 @@ def exportar_correos():
         anio = input("Año (4 dígitos): ")
         
         # try:
-        fecha_inicio_raw = date(int(anio), int(mes), int(dia))
+        # fecha_inicio_raw = date(int(anio), int(mes), int(dia))
+        # fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
+        fecha_inicio_raw = datetime(int(anio), int(mes), int(dia), 0, 0, 0)
         fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
+        
+        # print(f"{fecha_inicio_raw}")
+        # print(f"{fecha_fin_raw}")
 
         fecha_inicio_str = fecha_inicio_raw.strftime("%Y-%m-%d")
-        fecha_fin_str = fecha_fin_raw.strftime("%Y-%m-%d")
+        # fecha_fin_str = fecha_fin_raw.strftime("%Y-%m-%d")
 
-        fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
-        fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d")
+        # fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
+        # fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d")
 
         mes_int= int(mes)
 
@@ -283,7 +298,7 @@ def exportar_correos():
 
         mes_str = meses[mes_int]
         
-        # # Crear carpeta del día
+        # Crear carpeta del día
         carpeta_base = Path.home()/"Desktop"/f"Correos {mes_str}"/fecha_inicio_str
         
         # Conectar con Outlook
@@ -292,7 +307,7 @@ def exportar_correos():
 
         registros = []
 
-        filtro = f"[ReceivedTime] >= '{fecha_inicio.strftime('%m/%d/%Y')}' AND [ReceivedTime] <= '{fecha_fin.strftime('%m/%d/%Y')}'"
+        filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %I:%M %p')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %I:%M %p')}'"
         items_filtrados = carpeta.Items.Restrict(filtro)
         items_filtrados.Sort("[ReceivedTime]", True)
         
@@ -316,9 +331,9 @@ def exportar_correos():
                 recibido_py = datetime(recibido.year, recibido.month, recibido.day,
                                     recibido.hour, recibido.minute, recibido.second)
 
-                if not (fecha_inicio <= recibido_py <= fecha_fin):
+                if not (fecha_inicio_raw <= recibido_py < fecha_fin_raw):
                     continue
-
+                
                 if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE"]:
                     continue
                 
@@ -364,20 +379,22 @@ def exportar_correos():
                 except Exception:
                     mail.SaveAs(str(msg_path), 3)
                 
-                cc_filtrado = filtrar_cc(str(cc))
                 cargo, dependencia = obtener_info_persona(remitente)
                 
                 cant_anexos = len(lista_anexos)
                 observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
 
-                rem_filtrado = Corregir_rem(remitente)
+                cc_filtrado = filtrar_cc(str(cc))
+                remitente_filtrado = Corregir_rem(remitente)
+                destinatario_filtrado = limpiar_destinatarios(destinatario)
 
                 registros.append({
                     "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Remitente": nompropio_python(rem_filtrado),
+                    "Remitente": nompropio_python(remitente_filtrado),
                     "Cargo": cargo,
                     "Facultad/Dependencia": dependencia,
-                    "Destinatario": nompropio_python(destinatario),
+                    # "Destinatario": nompropio_python(destinatario),
+                    "Destinatario": nompropio_python(destinatario_filtrado),
                     "Empresa/Cargo": "",
                     "Asunto": nompropio_python(asunto),
                     "Con Copia": cc_filtrado,
