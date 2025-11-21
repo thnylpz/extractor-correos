@@ -38,10 +38,10 @@ Está diseñado especialmente para que pueda ser usado por personas sin conocimi
 ## 🛠 Instalación (solo la primera vez)
 
 1. Instalar Python y Git.
-2. Abrir CMD (o símbolo del sistema) en la carpeta donde quieras guardar el programa.
+2. Abrir CMD (o símbolo del sistema).
 3. Ejecutar:
 
 cd Documents
-
 git clone https://github.com/thnylpz/extractor-correos.git
+
 
