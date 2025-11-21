@@ -417,7 +417,7 @@ def exportar_correos():
                     "Observaciones": observaciones,
                     # "Anexo(s)": "; ".join(lista_anexos)
                     # "Anexo(s)": "; ".join([str(a) for a in lista_anexos])
-                    "Anexo(s)": len(lista_anexos)
+                    # "Anexo(s)": len(lista_anexos)
                 })
             except Exception as e:
                 print(f"Error procesando correo: {e}")
@@ -445,7 +445,7 @@ def exportar_correos():
                 celda.alignment = Alignment(horizontal="center", vertical="center")
             
             # Ocultar la columna J
-            ws.column_dimensions['J'].hidden = True
+            # ws.column_dimensions['J'].hidden = True
 
             # Encabezados
             header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
