@@ -315,7 +315,7 @@ def exportar_correos():
         mes_str = meses[mes_int]
         
         # Crear carpeta del día
-        carpeta_base = Path.home()/"Desktop"/f"Correos {mes_str}"/fecha_inicio_str
+        carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
         
         # Conectar con Outlook
         outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
@@ -323,7 +323,12 @@ def exportar_correos():
 
         registros = []
 
-        filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %I:%M %p')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %I:%M %p')}'"
+        # filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %I:%M %p')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %I:%M %p')}'"
+        filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %H:%M')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %H:%M')}'"
+        
+        # print(fecha_inicio_raw.strftime('%d/%m/%Y %H:%M'))
+        # print(fecha_fin_raw.strftime('%d/%m/%Y %H:%M'))
+        
         items_filtrados = carpeta.Items.Restrict(filtro)
         items_filtrados.Sort("[ReceivedTime]", True)
         
