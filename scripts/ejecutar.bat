@@ -21,7 +21,7 @@ echo.
 
 cd /d "%~dp0\..\docs"
 REM --- Instalar dependencias ---
-echo Instalando dependencias
+echo Instalando dependencias . . .
 echo.
 IF EXIST requirements.txt (
     python -m pip install --upgrade pip >nul
