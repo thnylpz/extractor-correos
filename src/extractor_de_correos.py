@@ -278,251 +278,289 @@ PERSONAL_LIMPIO = {
     for nombre_original, info in PERSONAL_INFO.items()
 }
 
+def mostrar_menu():
+    while True:
+        print("=== Exportador de Correos y Quipux ===", end="\n\n")
+        print("1. Correos\n2. Quipux")
+            
+        opcion = input("\nOpción: ")
+        tipo = ""
+            
+        if(opcion == "1" ):
+            os.system("cls")
+            tipo = "correo"
+            exportar(tipo)
+        elif (opcion == "2"):
+            os.system("cls")
+            tipo = "quipux"
+            exportar(tipo)
+        else:
+            break
+
+def exportar_excel(registros, carpeta_base, fecha_inicio_str):
+    # === Exportar resultados a Excel con formato ===
+    if registros:
+        df = pd.DataFrame(registros)
+        ruta_excel = carpeta_base / f"{fecha_inicio_str}_CorreosExportados.xlsx"
+        df.to_excel(ruta_excel, index=False)
+
+        # === Aplicar formato con openpyxl ===
+        wb = load_workbook(ruta_excel)
+        ws = wb.active
+
+        # Cuerpo
+        for row in ws.iter_rows():
+            for celda in row:
+                celda.font = Font(name="Arial", size=12)
+                if celda.value is not None:   # opcional: solo celdas con contenido
+                    celda.alignment = Alignment(wrap_text=True, horizontal="left", vertical="top")
+
+        for celda in ws["I"]:
+            celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
+            celda.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Ocultar la columna J
+        # ws.column_dimensions['J'].hidden = True
+
+        # Encabezados
+        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+
+        for col in range(1, ws.max_column + 1):
+            cell = ws.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
+
+        # Bordes
+        thin_border = Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin")
+        )
+
+        # Aplicar bordes a las celdas
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+            for cell in row:
+                cell.border = thin_border
+
+        # Ajustar ancho de columnas
+        for col in ws.columns:
+            column = get_column_letter(col[0].column)
+            ws.column_dimensions[column].width = 20.71
+
+        ws.column_dimensions["G"].width = 30.71
+        ws.column_dimensions["I"].width = 30.71
+        
+        # Ajustar alto de filas
+        for row in ws.iter_rows():
+            celda = row[0]
+            ws.row_dimensions[celda.row+1].height = 150.04
+
+        # Convertir a tabla con estilo
+        ultima_fila = ws.max_row
+        ultima_col = ws.max_column
+        rango_tabla = f"A1:{get_column_letter(ultima_col)}{ultima_fila}"
+
+        # Llenar con color amarillo las celdas vacías
+        body_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") #amarillo
+        
+        for fila in ws[rango_tabla]:     # fila = tuple de celdas
+            for celda in fila:           # celda = objeto real de openpyxl
+                if celda.value is None or celda.value == "":
+                    celda.fill = body_fill
+
+        # Tabla
+        tabla = Table(displayName="CorreosExportados", ref=rango_tabla)
+        estilo = TableStyleInfo(
+            name="TableStyleMedium2",
+            showRowStripes=True,
+            showColumnStripes=False
+        )
+        tabla.tableStyleInfo = estilo
+        ws.add_table(tabla)
+        ws.sheet_view.zoomScale = 80 # Ajustar zoom
+        wb.save(ruta_excel)
+
+        print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} correos.")
+        input("\nPresione ENTER para ver los correos.")
+        os.system("cls")
+        os.startfile(carpeta_base)
+    else:
+        print(Fore.RED + "\nNo se encontraron correos en el rango especificado.")
+        input("\nPresione ENTER para continuar.")
+        os.system("cls")    
+
 # === Script principal ===
-def exportar_correos():
+def exportar(tipo):
+    if(tipo == "correo"):
+        print("=== Exportador Correos y Anexos ===", end="\n\n")
+    elif(tipo == "quipux"):
+        print("=== Exportador Quipux ===", end="\n\n")
+        
     # Inicializa colorama
     init(autoreset=True)  # autoreset=True hace que después de cada print el color vuelva al normal
     
-    while True:
-        print("=== Exportador de Correos con Anexos ===", end="\n\n")
+    # while True:
+        # print("=== Exportador de Correos con Anexos ===", end="\n\n")
+    # print("=== Exportar Correos y Anexos ===", end="\n\n")
 
-        # Pedir fechas al usuario
-        dia = input("Día (1-31): ")
-        mes = input("Mes (1-12): ")
-        anio = input("Año (4 dígitos): ")
-        
-        # try:
-        # fecha_inicio_raw = date(int(anio), int(mes), int(dia))
-        # fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
-        fecha_inicio_raw = datetime(int(anio), int(mes), int(dia), 0, 0, 0)
-        fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
-        
-        # print(f"{fecha_inicio_raw}")
-        # print(f"{fecha_fin_raw}")
+    # Pedir fechas al usuario
+    dia = input("Día (1-31): ")
+    mes = input("Mes (1-12): ")
+    anio = input("Año (4 dígitos): ")
+    
+    # try:
+    # fecha_inicio_raw = date(int(anio), int(mes), int(dia))
+    # fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
+    fecha_inicio_raw = datetime(int(anio), int(mes), int(dia), 0, 0, 0)
+    fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
+    
+    # print(f"{fecha_inicio_raw}")
+    # print(f"{fecha_fin_raw}")
 
-        fecha_inicio_str = fecha_inicio_raw.strftime("%Y-%m-%d")
-        # fecha_fin_str = fecha_fin_raw.strftime("%Y-%m-%d")
+    fecha_inicio_str = fecha_inicio_raw.strftime("%Y-%m-%d")
+    # fecha_fin_str = fecha_fin_raw.strftime("%Y-%m-%d")
 
-        # fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
-        # fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d")
+    # fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
+    # fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d")
 
-        mes_int= int(mes)
+    mes_int= int(mes)
 
-        meses = {1:"Enero", 2:"Febrero", 3:"Marzo", 4:"Abril",
-                 5:"Mayo", 6:"Junio", 7:"Julio", 8:"Agosto",
-                 9:"Septiembre", 10:"Octubre", 11:"Noviembre", 12:"Diciembre"}
+    meses = {1:"Enero", 2:"Febrero", 3:"Marzo", 4:"Abril",
+                5:"Mayo", 6:"Junio", 7:"Julio", 8:"Agosto",
+                9:"Septiembre", 10:"Octubre", 11:"Noviembre", 12:"Diciembre"}
 
-        mes_str = meses[mes_int]
-        
-        # Crear carpeta del día
-        carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
-        
-        # Conectar con Outlook
-        outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-        carpeta = outlook.GetDefaultFolder(6)  # 6 = Bandeja de entrada
+    mes_str = meses[mes_int]
+    
+    # Crear carpeta del día
+    carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
+    
+    # Conectar con Outlook
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    carpeta = outlook.GetDefaultFolder(6)  # 6 = Bandeja de entrada
 
-        registros = []
+    registros = []
 
-        # filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %I:%M %p')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %I:%M %p')}'"
-        filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %H:%M')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %H:%M')}'"
-        
-        # print(fecha_inicio_raw.strftime('%d/%m/%Y %H:%M'))
-        # print(fecha_fin_raw.strftime('%d/%m/%Y %H:%M'))
-        
-        items = carpeta.Items
-        items.Sort("[ReceivedTime]", True)   # True = descendente, False = ascendente
-        items_filtrados = items.Restrict(filtro)
-        
-        word = win32com.client.Dispatch("Word.Application")
-        word.Visible = False
-        
-        if len(items_filtrados) > 0:
-            print("\nProcesando correos", end="")
+    # filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %I:%M %p')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %I:%M %p')}'"
+    filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %H:%M')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %H:%M')}'"
+    
+    # print(fecha_inicio_raw.strftime('%d/%m/%Y %H:%M'))
+    # print(fecha_fin_raw.strftime('%d/%m/%Y %H:%M'))
+    
+    # items_filtrados = carpeta.Items.Restrict(filtro)
+    # items_filtrados.Sort("[ReceivedTime]", True)
+    # print(f"\n\n{carpeta.Items[3]}\n\n")
+    
+    items = carpeta.Items
+    items.Sort("[ReceivedTime]", False)   # True = descendente, False = ascendente
+    # print(f"\n\n{items[0].ReceivedTime}\n\n")
+    items_filtrados = items.Restrict(filtro)
+    # print(f"\n\n{items_filtrados[0].ReceivedTime}\n\n")
+    
+    word = win32com.client.Dispatch("Word.Application")
+    word.Visible = False
+    
+    if len(items_filtrados) > 0:
+        print("\nProcesando", end="")
 
-        for mail in items_filtrados:
-            try:
-                if mail.Class != 43:
-                    continue
+    for mail in items_filtrados:
+        try:
+            if mail.Class != 43:
+                continue
 
-                remitente = mail.SenderName
-                destinatario = mail.To
-                asunto = mail.Subject or ""
-                cc = mail.CC or ""
+            remitente = mail.SenderName
+            destinatario = mail.To
+            asunto = mail.Subject or ""
+            cc = mail.CC or ""
 
-                recibido = mail.ReceivedTime
-                recibido_py = datetime(recibido.year, recibido.month, recibido.day,
-                                    recibido.hour, recibido.minute, recibido.second)
+            recibido = mail.ReceivedTime
+            recibido_py = datetime(recibido.year, recibido.month, recibido.day,
+                                recibido.hour, recibido.minute, recibido.second)
 
-                if not (fecha_inicio_raw <= recibido_py < fecha_fin_raw):
-                    continue
-                
+            if not (fecha_inicio_raw <= recibido_py < fecha_fin_raw):
+                continue
+            
+            if(tipo == "correo"):
                 if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE"]:
                     continue
-                
-                print(".", end="", flush=True)
-                
-                id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_texto(remitente)
-                asunto_limpio = limpiar_texto(asunto)
-                carpeta_nombre = f"{id_correo}"
-                if len(carpeta_nombre) > 100:
-                    carpeta_nombre = carpeta_nombre[:100]
-
-                carpeta_base.mkdir(parents=True, exist_ok=True) # crear carpeta base
-
-                carpeta_correo = carpeta_base / carpeta_nombre
-                os.makedirs(carpeta_correo, exist_ok=True) # crear carpeta de correo
-
-                lista_anexos = []
-
-                if mail.Attachments.Count > 0:
-                    i = 0
-                    for anexo in mail.Attachments:
-                        nombre_archivo = limpiar_texto(anexo.FileName)
-                        if "image" not in nombre_archivo.lower() and "outlook" not in nombre_archivo.lower():
-                            carpeta_anexos = carpeta_correo / "Anexos"
-                            os.makedirs(carpeta_anexos, exist_ok=True) # crear carpeta Anexos, si existen
-                            
-                            ruta_anexo = carpeta_anexos / nombre_archivo
-                            anexo.SaveAsFile(str(ruta_anexo))
-                            i+=1
-                            # lista_anexos.append(nombre_archivo)
-                            lista_anexos.append(i)
-
-                mht_path = carpeta_correo / f"{asunto_limpio}.mht"
-                pdf_path = carpeta_correo / f"{asunto_limpio}.pdf"
-                msg_path = carpeta_correo / f"{asunto_limpio}.msg"
-
-                try:
-                    mail.SaveAs(str(mht_path), 10)
-                    doc = word.Documents.Open(str(mht_path))
-                    doc.ExportAsFixedFormat(OutputFileName=str(pdf_path), ExportFormat=17)
-                    doc.Close(False)
-                    os.remove(mht_path)
-                except Exception:
-                    mail.SaveAs(str(msg_path), 3)
-                
-                cargo, dependencia = obtener_info_persona(remitente)
-                
-                cant_anexos = len(lista_anexos)
-                observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
-
-                cc_filtrado = filtrar_cc(str(cc))
-                remitente_filtrado = Corregir_rem(remitente)
-                destinatario_filtrado = limpiar_destinatarios(destinatario)
-
-                registros.append({
-                    "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Remitente": nompropio_python(remitente_filtrado),
-                    "Cargo": cargo,
-                    "Facultad/Dependencia": dependencia,
-                    # "Destinatario": nompropio_python(destinatario),
-                    "Destinatario": nompropio_python(destinatario_filtrado),
-                    "Empresa/Cargo": "",
-                    "Asunto": nompropio_python(asunto),
-                    "Con Copia": cc_filtrado,
-                    "Observaciones": observaciones,
-                    # "Anexo(s)": "; ".join(lista_anexos)
-                    # "Anexo(s)": "; ".join([str(a) for a in lista_anexos])
-                    # "Anexo(s)": len(lista_anexos)
-                })
-            except Exception as e:
-                print(f"Error procesando correo: {e}")
-        word.Quit()
-
-        # === Exportar resultados a Excel con formato ===
-        if registros:
-            df = pd.DataFrame(registros)
-            ruta_excel = carpeta_base / f"{fecha_inicio_str}_CorreosExportados.xlsx"
-            df.to_excel(ruta_excel, index=False)
-
-            # === Aplicar formato con openpyxl ===
-            wb = load_workbook(ruta_excel)
-            ws = wb.active
-
-            # Cuerpo
-            for row in ws.iter_rows():
-                for celda in row:
-                    celda.font = Font(name="Arial", size=12)
-                    if celda.value is not None:   # opcional: solo celdas con contenido
-                        celda.alignment = Alignment(wrap_text=True, horizontal="left", vertical="top")
-
-            for celda in ws["I"]:
-                celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
-                celda.alignment = Alignment(horizontal="center", vertical="center")
+            elif(tipo == "quipux"):
+                if remitente not in ["QUIPUX"]:
+                    continue
             
-            # Ocultar la columna J
-            # ws.column_dimensions['J'].hidden = True
-
-            # Encabezados
-            header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
-            header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-
-            for col in range(1, ws.max_column + 1):
-                cell = ws.cell(row=1, column=col)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
-
-            # Bordes
-            thin_border = Border(
-                left=Side(style="thin"),
-                right=Side(style="thin"),
-                top=Side(style="thin"),
-                bottom=Side(style="thin")
-            )
-
-            # Aplicar bordes a las celdas
-            for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
-                for cell in row:
-                    cell.border = thin_border
-
-            # Ajustar ancho de columnas
-            for col in ws.columns:
-                column = get_column_letter(col[0].column)
-                ws.column_dimensions[column].width = 20.71
-
-            ws.column_dimensions["G"].width = 30.71
-            ws.column_dimensions["I"].width = 30.71
+            print(".", end="", flush=True)
             
-            # Ajustar alto de filas
-            for row in ws.iter_rows():
-                celda = row[0]
-                ws.row_dimensions[celda.row+1].height = 150.04
+            id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_texto(remitente)
+            asunto_limpio = limpiar_texto(asunto)
+            carpeta_nombre = f"{id_correo}"
+            if len(carpeta_nombre) > 100:
+                carpeta_nombre = carpeta_nombre[:100]
 
-            # Convertir a tabla con estilo
-            ultima_fila = ws.max_row
-            ultima_col = ws.max_column
-            rango_tabla = f"A1:{get_column_letter(ultima_col)}{ultima_fila}"
+            carpeta_base.mkdir(parents=True, exist_ok=True) # crear carpeta base
 
-            # Llenar con color amarillo las celdas vacías
-            body_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") #amarillo
+            carpeta_correo = carpeta_base / carpeta_nombre
+            os.makedirs(carpeta_correo, exist_ok=True) # crear carpeta de correo
+
+            lista_anexos = []
+
+            if mail.Attachments.Count > 0:
+                i = 0
+                for anexo in mail.Attachments:
+                    nombre_archivo = limpiar_texto(anexo.FileName)
+                    if "image" not in nombre_archivo.lower() and "outlook" not in nombre_archivo.lower():
+                        carpeta_anexos = carpeta_correo / "Anexos"
+                        os.makedirs(carpeta_anexos, exist_ok=True) # crear carpeta Anexos, si existen
+                        
+                        ruta_anexo = carpeta_anexos / nombre_archivo
+                        anexo.SaveAsFile(str(ruta_anexo))
+                        i+=1
+                        # lista_anexos.append(nombre_archivo)
+                        lista_anexos.append(i)
+
+            mht_path = carpeta_correo / f"{asunto_limpio}.mht"
+            pdf_path = carpeta_correo / f"{asunto_limpio}.pdf"
+            msg_path = carpeta_correo / f"{asunto_limpio}.msg"
+
+            try:
+                mail.SaveAs(str(mht_path), 10)
+                doc = word.Documents.Open(str(mht_path))
+                doc.ExportAsFixedFormat(OutputFileName=str(pdf_path), ExportFormat=17)
+                doc.Close(False)
+                os.remove(mht_path)
+            except Exception:
+                mail.SaveAs(str(msg_path), 3)
             
-            for fila in ws[rango_tabla]:     # fila = tuple de celdas
-                for celda in fila:           # celda = objeto real de openpyxl
-                    if celda.value is None or celda.value == "":
-                        celda.fill = body_fill
+            cargo, dependencia = obtener_info_persona(remitente)
+            
+            cant_anexos = len(lista_anexos)
+            observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
 
-            # Tabla
-            tabla = Table(displayName="CorreosExportados", ref=rango_tabla)
-            estilo = TableStyleInfo(
-                name="TableStyleMedium2",
-                showRowStripes=True,
-                showColumnStripes=False
-            )
-            tabla.tableStyleInfo = estilo
-            ws.add_table(tabla)
-            ws.sheet_view.zoomScale = 80 # Ajustar zoom
-            wb.save(ruta_excel)
+            cc_filtrado = filtrar_cc(str(cc))
+            remitente_filtrado = Corregir_rem(remitente)
+            destinatario_filtrado = limpiar_destinatarios(destinatario)
 
-            print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} correos.")
-            input("\nPresione ENTER para ver los correos.")
-            os.system("cls")
-            os.startfile(carpeta_base)
-        else:
-            print(Fore.RED + "\nNo se encontraron correos en el rango especificado.")
-            input("\nPresione ENTER para continuar.")
-            os.system("cls")    
+            registros.append({
+                "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
+                "Remitente": nompropio_python(remitente_filtrado),
+                "Cargo": cargo,
+                "Facultad/Dependencia": dependencia,
+                # "Destinatario": nompropio_python(destinatario),
+                "Destinatario": nompropio_python(destinatario_filtrado),
+                "Empresa/Cargo": "",
+                "Asunto": nompropio_python(asunto),
+                "Con Copia": cc_filtrado,
+                "Observaciones": observaciones,
+                # "Anexo(s)": "; ".join(lista_anexos)
+                # "Anexo(s)": "; ".join([str(a) for a in lista_anexos])
+                # "Anexo(s)": len(lista_anexos)
+            })
+        except Exception as e:
+            print(f"Error procesando correo: {e}")
+    word.Quit()
+    exportar_excel(registros, carpeta_base, fecha_inicio_str)
+    
 
 if __name__ == "__main__":
-    exportar_correos()
+    mostrar_menu()
 
