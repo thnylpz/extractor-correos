@@ -17,7 +17,7 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
-echo.
+@REM echo.
 echo Python detectado correctamente.
 echo.
 
@@ -25,16 +25,17 @@ cd /d "%~dp0\..\docs"
 REM --- Instalar dependencias ---
 echo Instalando dependencias . . .
 echo.
-IF EXIST requirements.txt (
-    python -m pip install --upgrade pip >nul
-    python -m pip install -r requirements.txt
-)
+@REM IF EXIST requirements.txt (
+@REM     python -m pip install --upgrade pip >nul
+@REM     python -m pip install -r requirements.txt
+@REM )
 
 cls
 
 cd /d "%~dp0\..\src"
 REM --- Ejecutar el script principal ---
 python extractor_de_correos.py
+@REM python v2.py
 
 pause
 
