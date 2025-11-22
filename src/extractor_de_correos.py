@@ -560,7 +560,6 @@ def exportar(tipo):
     word.Quit()
     exportar_excel(registros, carpeta_base, fecha_inicio_str)
     
-
 if __name__ == "__main__":
     mostrar_menu()
 
