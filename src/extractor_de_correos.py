@@ -6,7 +6,6 @@ import unicodedata
 
 from datetime import datetime
 from datetime import timedelta
-from datetime import date
 
 from pathlib import Path
 
@@ -421,10 +420,8 @@ def exportar(tipo):
     
     # Crear carpeta del día
     if(tipo == "correo"):
-        # carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
         carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {anio}"/fecha_inicio_str
     elif(tipo == "quipux"):
-        # carpeta_base = Path.home()/"Downloads"/f"Quipux {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
         carpeta_base = Path.home()/"Downloads"/f"Quipux {mes_str} - {anio}"/fecha_inicio_str
     
     # Conectar con Outlook
@@ -491,18 +488,18 @@ def exportar(tipo):
                     nombre_archivo = limpiar_texto(anexo.FileName)
                     if "image" not in nombre_archivo.lower() and "outlook" not in nombre_archivo.lower():
                         carpeta_anexos = carpeta_correo / "Anexos"
-                        os.makedirs(carpeta_anexos, exist_ok=True) # crear carpeta Anexos, si existen
-                        
+                        os.makedirs(carpeta_anexos, exist_ok=True) # crear carpeta de anexos   
                         ruta_anexo = carpeta_anexos / nombre_archivo
                         anexo.SaveAsFile(str(ruta_anexo))
                         i+=1
-                        # lista_anexos.append(nombre_archivo)
                         lista_anexos.append(i)
 
+            # Rutas para guardar correo
             mht_path = carpeta_correo / f"{asunto_limpio}.mht"
             pdf_path = carpeta_correo / f"{asunto_limpio}.pdf"
             msg_path = carpeta_correo / f"{asunto_limpio}.msg"
 
+            # Conveersión del correo a .pdf
             try:
                 mail.SaveAs(str(mht_path), 10)
                 doc = word.Documents.Open(str(mht_path))
@@ -512,6 +509,7 @@ def exportar(tipo):
             except Exception:
                 mail.SaveAs(str(msg_path), 3)
             
+            # Procesos antes de guardar los datos
             cargo, dependencia = obtener_info_persona(remitente)
             
             cant_anexos = len(lista_anexos)
@@ -521,26 +519,23 @@ def exportar(tipo):
             remitente_filtrado = Corregir_rem(remitente)
             destinatario_filtrado = limpiar_destinatarios(destinatario)
 
+            # Guardar datos del correo/quipux
             registros.append({
                 "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
                 "Remitente": nompropio_python(remitente_filtrado),
                 "Cargo": cargo,
                 "Facultad/Dependencia": dependencia,
-                # "Destinatario": nompropio_python(destinatario),
                 "Destinatario": nompropio_python(destinatario_filtrado),
                 "Empresa/Cargo": "",
                 "Asunto": nompropio_python(asunto),
                 "Con Copia": cc_filtrado,
-                "Observaciones": observaciones,
-                # "Anexo(s)": "; ".join(lista_anexos)
-                # "Anexo(s)": "; ".join([str(a) for a in lista_anexos])
-                # "Anexo(s)": len(lista_anexos)
+                "Observaciones": observaciones
             })
         except Exception as e:
             print(f"Error procesando correo: {e}")
     word.Quit()
     exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo)
-    
+ 
 if __name__ == "__main__":
     mostrar_menu()
 
