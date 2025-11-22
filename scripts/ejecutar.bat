@@ -35,7 +35,6 @@ cls
 cd /d "%~dp0\..\src"
 REM --- Ejecutar el script principal ---
 python extractor_de_correos.py
-@REM python v2.py
 
 pause
 

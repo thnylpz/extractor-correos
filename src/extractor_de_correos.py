@@ -87,7 +87,7 @@ def filtrar_cc(cc):
     else:
         return "\n".join(resultado)
 
-def Corregir_rem(rem):
+def remitentes_conocidos(rem):
     """Pone el título a los nombres que aparecen en la lista, en el campo remitente"""
     if not rem:
         return ""
@@ -97,7 +97,8 @@ def Corregir_rem(rem):
         "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa A. Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
         "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
         "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
-        "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil"
+        "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil",
+        "Ab. María Marroquín Mora"
     ]
     rem_norm = quitar_acentos(rem.lower())
     resultado = []
@@ -268,6 +269,12 @@ PERSONAL_INFO = {
     "Sr. Bethzaida Villamil": {
         "cargo": "Asistente 2 Diseño y Planificación (DIOU)",
         "dependencia": "Jefatura de Diseño y Fiscalización"
+    },
+    
+    #Otros
+    "Ab. María Marroquín Mora": {
+        "cargo": "Analista de Talento Humano",
+        "dependencia": "DIOU"
     }
 }
 
@@ -516,7 +523,7 @@ def exportar(tipo):
             observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
 
             cc_filtrado = filtrar_cc(str(cc))
-            remitente_filtrado = Corregir_rem(remitente)
+            remitente_filtrado = remitentes_conocidos(remitente)
             destinatario_filtrado = limpiar_destinatarios(destinatario)
 
             # Guardar datos del correo/quipux
