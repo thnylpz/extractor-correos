@@ -521,13 +521,8 @@ def exportar_correos():
         else:
             print(Fore.RED + "\nNo se encontraron correos en el rango especificado.")
             input("\nPresione ENTER para continuar.")
-            os.system("cls")
-
-# def prueba():
-#     input()
-    
+            os.system("cls")    
 
 if __name__ == "__main__":
     exportar_correos()
-    # prueba()
 

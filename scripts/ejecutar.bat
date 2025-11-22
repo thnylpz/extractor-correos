@@ -5,6 +5,7 @@ cd /d "%~dp0\..\src"
 
 REM --- Actualizar desde Github ---
 git pull
+
 cls
 
 REM --- Verificar si Python está instalado ---
@@ -16,17 +17,19 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
+echo.
 echo Python detectado correctamente.
 echo.
 
 cd /d "%~dp0\..\docs"
 REM --- Instalar dependencias ---
-echo Instalando dependencias . . .
+@REM echo Instalando dependencias . . .
 echo.
-IF EXIST requirements.txt (
-    python -m pip install --upgrade pip >nul
-    python -m pip install -r requirements.txt
-)
+@REM IF EXIST requirements.txt (
+@REM     python -m pip install --upgrade pip >nul
+@REM     python -m pip install -r requirements.txt
+@REM )
+
 cls
 
 cd /d "%~dp0\..\src"
