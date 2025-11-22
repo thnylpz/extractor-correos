@@ -17,7 +17,6 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from colorama import init, Fore
 
-# === Funciones auxiliares ===
 def limpiar_texto(nombre):
     """Limpia nombres de archivo sin eliminar la extensión."""
     if not nombre:
@@ -297,11 +296,15 @@ def mostrar_menu():
         else:
             break
 
-def exportar_excel(registros, carpeta_base, fecha_inicio_str):
+def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
     # === Exportar resultados a Excel con formato ===
     if registros:
         df = pd.DataFrame(registros)
-        ruta_excel = carpeta_base / f"{fecha_inicio_str}_CorreosExportados.xlsx"
+        if(tipo=="correo"):
+            ruta_excel = carpeta_base / f"{fecha_inicio_str}_CorreosExportados.xlsx"
+        elif(tipo == "quipux"):
+            ruta_excel = carpeta_base / f"{fecha_inicio_str}_QuipuxExportados.xlsx"
+        
         df.to_excel(ruta_excel, index=False)
 
         # === Aplicar formato con openpyxl ===
@@ -318,9 +321,6 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str):
         for celda in ws["I"]:
             celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
             celda.alignment = Alignment(horizontal="center", vertical="center")
-        
-        # Ocultar la columna J
-        # ws.column_dimensions['J'].hidden = True
 
         # Encabezados
         header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
@@ -392,39 +392,24 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str):
         input("\nPresione ENTER para continuar.")
         os.system("cls")    
 
-# === Script principal ===
 def exportar(tipo):
     if(tipo == "correo"):
-        print("=== Exportador Correos y Anexos ===", end="\n\n")
+        print("=== Exportador de Correos y Anexos ===", end="\n\n")
     elif(tipo == "quipux"):
-        print("=== Exportador Quipux ===", end="\n\n")
+        print("=== Exportador de Quipux ===", end="\n\n")
         
     # Inicializa colorama
-    init(autoreset=True)  # autoreset=True hace que después de cada print el color vuelva al normal
-    
-    # while True:
-        # print("=== Exportador de Correos con Anexos ===", end="\n\n")
-    # print("=== Exportar Correos y Anexos ===", end="\n\n")
+    init(autoreset=True)  # Después de cada print el color vuelva al normal
 
     # Pedir fechas al usuario
     dia = input("Día (1-31): ")
     mes = input("Mes (1-12): ")
     anio = input("Año (4 dígitos): ")
     
-    # try:
-    # fecha_inicio_raw = date(int(anio), int(mes), int(dia))
-    # fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
     fecha_inicio_raw = datetime(int(anio), int(mes), int(dia), 0, 0, 0)
     fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
-    
-    # print(f"{fecha_inicio_raw}")
-    # print(f"{fecha_fin_raw}")
 
     fecha_inicio_str = fecha_inicio_raw.strftime("%Y-%m-%d")
-    # fecha_fin_str = fecha_fin_raw.strftime("%Y-%m-%d")
-
-    # fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
-    # fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d")
 
     mes_int= int(mes)
 
@@ -435,7 +420,12 @@ def exportar(tipo):
     mes_str = meses[mes_int]
     
     # Crear carpeta del día
-    carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
+    if(tipo == "correo"):
+        # carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
+        carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {anio}"/fecha_inicio_str
+    elif(tipo == "quipux"):
+        # carpeta_base = Path.home()/"Downloads"/f"Quipux {mes_str} - {fecha_inicio_raw.strftime("%Y")}"/fecha_inicio_str
+        carpeta_base = Path.home()/"Downloads"/f"Quipux {mes_str} - {anio}"/fecha_inicio_str
     
     # Conectar con Outlook
     outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
@@ -443,21 +433,11 @@ def exportar(tipo):
 
     registros = []
 
-    # filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %I:%M %p')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %I:%M %p')}'"
     filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %H:%M')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %H:%M')}'"
-    
-    # print(fecha_inicio_raw.strftime('%d/%m/%Y %H:%M'))
-    # print(fecha_fin_raw.strftime('%d/%m/%Y %H:%M'))
-    
-    # items_filtrados = carpeta.Items.Restrict(filtro)
-    # items_filtrados.Sort("[ReceivedTime]", True)
-    # print(f"\n\n{carpeta.Items[3]}\n\n")
     
     items = carpeta.Items
     items.Sort("[ReceivedTime]", False)   # True = descendente, False = ascendente
-    # print(f"\n\n{items[0].ReceivedTime}\n\n")
     items_filtrados = items.Restrict(filtro)
-    # print(f"\n\n{items_filtrados[0].ReceivedTime}\n\n")
     
     word = win32com.client.Dispatch("Word.Application")
     word.Visible = False
@@ -483,7 +463,8 @@ def exportar(tipo):
                 continue
             
             if(tipo == "correo"):
-                if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE"]:
+                if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE", "Zoom", "Titulares EL UNIVERSO", "Canva",
+                                 "ClickUp Notifications"]:
                     continue
             elif(tipo == "quipux"):
                 if remitente not in ["QUIPUX"]:
@@ -558,7 +539,7 @@ def exportar(tipo):
         except Exception as e:
             print(f"Error procesando correo: {e}")
     word.Quit()
-    exportar_excel(registros, carpeta_base, fecha_inicio_str)
+    exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo)
     
 if __name__ == "__main__":
     mostrar_menu()
