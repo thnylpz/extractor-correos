@@ -70,12 +70,12 @@ def filtrar_cc(cc):
     if not cc:
         return "-----"
     autorizados = [
-        "Arq. Belty Espinoza Santos", "Arq. Ricardo Valverde Paredes", "Ing. Jhon Araujo Borjas", "Arq. Ader Intriago Arteaga",
-        "Ing. Jorge Maldonado Granizo", "Arq. Roberto Vivanco Calderon", "Ing. Lissette Moreno Balladares",
-        "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa A. Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
-        "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
-        "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
-        "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil"
+        "Arq. Belty Espinoza", "Arq. Ricardo Valverde", "Ing. Jhon Araujo", "Arq. Ader Intriago",
+        "Ing. Jorge Maldonado", "Arq. Roberto Vivanco", "Ing. Lissette Moreno",
+        "Ing. Luis Vargas", "Ing. Patricia Fuentes", "Lic. Narcisa Munoz", "Lic. Leonardo Rodriguez",
+        "Ing. Jaime Franco", "Arq. Jhonther Cardenas", "Ing. Miguel Flores", "Ing. Jorge Tohaquiza",
+        "Ing. Humberto Rodriguez", "Ing. Eddy Alfonso", "Gilda Suarez", "Arq. Pilar Zalamea",
+        "Ing. Isaac Munoz", "Arq. Franklin Medina", "Ing. Victor Velasco", "Sra. Bethzaida Villamil"
     ]
     cc_norm = quitar_acentos(cc.lower())
     resultado = []
