@@ -88,7 +88,7 @@ def filtrar_cc(cc):
     else:
         return "\n".join(resultado)
 
-def remitentes_conocidos(rem):
+def nombres_conocidos_rem(rem):
     """Pone el título a los nombres que aparecen en la lista, en el campo remitente"""
     if not rem:
         return ""
@@ -111,6 +111,33 @@ def remitentes_conocidos(rem):
     
     if len(resultado) == 0:
         return rem
+    else:
+        return "\n".join(resultado)
+
+def nombres_conocidos_des(des, tipo):
+    """Pone el título a los nombres que aparecen en la lista, en el campo remitente"""
+    if not des:
+        return ""
+    autorizados = [
+        "Arq. Belty Espinoza Santos", "Arq. Ricardo Valverde Paredes", "Ing. Jhon Araujo Borjas", "Arq. Ader Intriago Arteaga",
+        "Ing. Jorge Maldonado Granizo", "Arq. Roberto Vivanco Calderon", "Ing. Lissette Moreno Balladares",
+        "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa A. Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
+        "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
+        "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
+        "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil",
+        "Ab. María Marroquín Mora"
+    ]
+    des_norm = quitar_acentos(des.lower())
+    resultado = []
+    for nombre in autorizados:
+        n_norm = quitar_acentos(nombre.lower())
+        partes = n_norm.split()
+        if(tipo == "quipux"):
+            if len(partes) >= 2 and partes[1] in des_norm and partes[-1] in des_norm:
+                resultado.append(nombre)
+    
+    if len(resultado) == 0:
+        return des
     else:
         return "\n".join(resultado)
 
@@ -295,11 +322,11 @@ def mostrar_menu():
         if(opcion == "1" ):
             os.system("cls")
             tipo = "correo"
-            exportar(tipo)
+            extraer(tipo)
         elif (opcion == "2"):
             os.system("cls")
             tipo = "quipux"
-            exportar(tipo)
+            extraer(tipo)
         else:
             break
 
@@ -325,9 +352,10 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
                 if celda.value is not None:   # opcional: solo celdas con contenido
                     celda.alignment = Alignment(wrap_text=True, horizontal="left", vertical="top")
 
-        for celda in ws["I"]:
-            celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
-            celda.alignment = Alignment(horizontal="center", vertical="center")
+        if(tipo=="correo"):
+            for celda in ws["I"]:
+                celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
+                celda.alignment = Alignment(horizontal="center", vertical="center")
 
         # Encabezados
         header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
@@ -357,8 +385,11 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
             column = get_column_letter(col[0].column)
             ws.column_dimensions[column].width = 20.71
 
-        ws.column_dimensions["G"].width = 30.71
-        ws.column_dimensions["I"].width = 30.71
+        if(tipo=="correo"):
+            ws.column_dimensions["G"].width = 30.71
+            ws.column_dimensions["I"].width = 30.71
+        elif(tipo == "quipux"):
+            ws.column_dimensions["E"].width = 30.71
         
         # Ajustar alto de filas
         for row in ws.iter_rows():
@@ -379,7 +410,7 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
                     celda.fill = body_fill
 
         # Tabla
-        tabla = Table(displayName="CorreosExportados", ref=rango_tabla)
+        tabla = Table(displayName="Exportados", ref=rango_tabla)
         estilo = TableStyleInfo(
             name="TableStyleMedium2",
             showRowStripes=True,
@@ -390,16 +421,19 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
         ws.sheet_view.zoomScale = 80 # Ajustar zoom
         wb.save(ruta_excel)
 
-        print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} correos.")
-        input("\nPresione ENTER para ver los correos.")
+        print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} registros.")
+        input("\nPresione ENTER para abrir la carpeta.")
         os.system("cls")
         os.startfile(carpeta_base)
     else:
-        print(Fore.RED + "\n\nNo se encontraron correos en el rango especificado.")
+        if(tipo=="correo"):
+            print(Fore.RED + "\n\nNo se encontraron Correos en el rango especificado.")
+        elif(tipo == "quipux"):
+            print(Fore.RED + "\n\nNo se encontraron Quipux en el rango especificado.")
         input("\nPresione ENTER para continuar.")
         os.system("cls")    
 
-def exportar(tipo):
+def extraer(tipo):
     if(tipo == "correo"):
         print("=== Exportador de Correos y Anexos ===", end="\n\n")
     elif(tipo == "quipux"):
@@ -526,21 +560,32 @@ def exportar(tipo):
             observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
 
             cc_filtrado = filtrar_cc(str(cc))
-            remitente_filtrado = remitentes_conocidos(remitente)
-            destinatario_filtrado = limpiar_destinatarios(destinatario)
+            remitente_filtrado = nombres_conocidos_rem(remitente)
+            lista_destinatarios = limpiar_destinatarios(destinatario)
+            destinatarios = nombres_conocidos_des(lista_destinatarios, tipo)
+            cargo_destinatario, dependencia_destinatario = obtener_info_persona(destinatario)
 
             # Guardar datos del correo/quipux
-            registros.append({
-                "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
-                "Remitente": nompropio_python(remitente_filtrado),
-                "Cargo": cargo,
-                "Facultad/Dependencia": dependencia,
-                "Destinatario": nompropio_python(destinatario_filtrado),
-                "Empresa/Cargo": "",
-                "Asunto": nompropio_python(asunto),
-                "Con Copia": cc_filtrado,
-                "Observaciones": observaciones
-            })
+            if(tipo=="correo"):
+                registros.append({
+                    "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Remitente": nompropio_python(remitente_filtrado),
+                    "Cargo": cargo,
+                    "Facultad/Dependencia": dependencia,
+                    "Destinatario": nompropio_python(lista_destinatarios),
+                    "Empresa/Cargo": "",
+                    "Asunto": nompropio_python(asunto),
+                    "Con Copia": cc_filtrado,
+                    "Observaciones": observaciones
+                })
+            elif(tipo == "quipux"):
+                registros.append({
+                    "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Remitente": nompropio_python(remitente_filtrado),
+                    "Destinatario": nompropio_python(destinatarios),
+                    "Empresa/Cargo": cargo_destinatario,
+                    "Asunto": nompropio_python(asunto)
+                })
         except Exception as e:
             print(f"Error procesando correo: {e}")
     word.Quit()
