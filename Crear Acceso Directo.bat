@@ -21,6 +21,7 @@ powershell -NoProfile -Command ^
     "$S.IconLocation = '%PICON%'; " ^
     "$S.Save()"
 
+@REM hola
 @REM cls
 @echo Acceso directo creado correctamente.
 @echo.
