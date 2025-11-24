@@ -468,7 +468,7 @@ def exportar(tipo):
             
             if(tipo == "correo"):
                 if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE", "Zoom", "Titulares EL UNIVERSO", "Canva",
-                                 "ClickUp Notifications"]:
+                                 "ClickUp Notifications", "ClickUp Team"]:
                     continue
             elif(tipo == "quipux"):
                 if remitente not in ["QUIPUX"]:
