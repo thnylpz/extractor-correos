@@ -3,6 +3,7 @@ import re
 import win32com.client
 import pandas as pd
 import unicodedata
+import time
 
 from datetime import datetime
 from datetime import timedelta
@@ -394,7 +395,7 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
         os.system("cls")
         os.startfile(carpeta_base)
     else:
-        print(Fore.RED + "\nNo se encontraron correos en el rango especificado.")
+        print(Fore.RED + "\n\nNo se encontraron correos en el rango especificado.")
         input("\nPresione ENTER para continuar.")
         os.system("cls")    
 
@@ -448,6 +449,8 @@ def exportar(tipo):
     
     if len(items_filtrados) > 0:
         print("\nProcesando", end="")
+        
+    time.sleep(2)
 
     for mail in items_filtrados:
         try:
@@ -468,7 +471,7 @@ def exportar(tipo):
             
             if(tipo == "correo"):
                 if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE", "Zoom", "Titulares EL UNIVERSO", "Canva",
-                                 "ClickUp Notifications", "ClickUp Team"]:
+                                 "ClickUp Notifications", "ClickUp Team", "DepositPhotos"]:
                     continue
             elif(tipo == "quipux"):
                 if remitente not in ["QUIPUX"]:
