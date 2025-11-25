@@ -98,7 +98,7 @@ def nombres_conocidos_cc(cc):
         "Ing. Jorge Maldonado", "Arq. Roberto Vivanco", "Ing. Lissette Moreno",
         "Ing. Luis Vargas", "Ing. Patricia Fuentes", "Lic. Narcisa Munoz", "Lic. Leonardo Rodriguez",
         "Ing. Jaime Franco", "Arq. Jhonther Cardenas", "Ing. Miguel Flores", "Ing. Jorge Tohaquiza",
-        "Ing. Humberto Rodriguez", "Ing. Eddy Alfonso", "Gilda Suarez", "Arq. Pilar Zalamea",
+        "Ing. Humberto Rodriguez", "Ing. Eddy Alfonso", "Sra. Gilda Suarez", "Arq. Pilar Zalamea",
         "Ing. Isaac Munoz", "Arq. Franklin Medina", "Ing. Victor Velasco", "Sra. Bethzaida Villamil"
     ]
     cc_norm = quitar_acentos(cc.lower())
@@ -121,7 +121,7 @@ def nombres_conocidos_rem(rem):
         "Ing. Jorge Maldonado Granizo", "Arq. Roberto Vivanco Calderon", "Ing. Lissette Moreno Balladares",
         "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa A. Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
         "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
-        "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
+        "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Sra. Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
         "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil",
         "Ab. María Marroquín Mora", "Ing. Jorge Gutiérrez Tenorio"
     ]
@@ -138,7 +138,7 @@ def nombres_conocidos_rem(rem):
     else:
         return "\n".join(resultado)
 
-def formato_destinatarios(destinatario: str) -> str:
+def acortar_destinatarios(destinatario: str) -> str:
     if not destinatario:
         return ""
     
@@ -180,13 +180,44 @@ def formato_destinatarios(destinatario: str) -> str:
         #     resultado.append(partes[0])
 
     # Unir con salto de línea
-    return "\n".join(resultado)
+    # return "\n".join(resultado)
+    return resultado
 
-def obtener_info_persona(remitente):
+# def nombre_abreviado(nombre):
+#     partes = nombre.split()
+#     return f"{partes[0]} {partes[1]}"  # ignora título y toma "Nombre Apellido"
+
+def obtener_info_destinatarios(lista_nombres):
+    destinatarios = []
+    cargos = []
+    for nombre_abreviado in lista_nombres:
+        n = nompropio_python(nombre_abreviado)
+        persona = DESTINATARIOS_CONOCIDOS.get(n)
+        if persona:
+            destinatarios.append(persona["nombre_completo"])
+            cargos.append(persona["cargo"])
+        else:
+            destinatarios.append(nombre_abreviado)
+            # cargos.append("")
+            
+    return ("\n\n".join(destinatarios)), ("\n\n".join(cargos))
+
+# def aplicar_titulos(lista_nombres):
+#     resultado = []
+#     for n in lista_nombres:
+#         nn = nompropio_python(n)
+#         if nn in mapa_destinatarios:
+#             resultado.append(mapa_destinatarios[nn])
+#         else:
+#             resultado.append(n)  # si no está en la lista, lo dejas tal cual
+#     # return resultado
+#     return "\n".join(resultado)
+
+def obtener_info_remitente(remitente):
     nombre_limpio = limpiar_nombre(remitente)
     palabras = nombre_limpio.split()
 
-    for nombre_base, info in PERSONAL_LIMPIO.items():
+    for nombre_base, info in REMITENTES_LIMPIO.items():
         coincidencias = 0
         for p in palabras:
             if p in nombre_base:
@@ -403,7 +434,7 @@ def procesar():
             remitente = mail.SenderName
             anexos = mail.Attachments
             asunto = mail.Subject or ""
-            destinatario = mail.To
+            destinatarios_raw = mail.To
             cc = mail.CC or ""
             
             # Fecha python
@@ -455,10 +486,12 @@ def procesar():
             remitente_filtrado = nombres_conocidos_rem(remitente)
             
             # Obtener cargo y facultad del remitente conocido
-            cargo, dependencia = obtener_info_persona(remitente)
+            cargo, dependencia = obtener_info_remitente(remitente)
             
             # Obtener lista de destinatarios con saltos de línea
-            destinatarios_formatted = formato_destinatarios(destinatario)
+            destinatarios_cortos = acortar_destinatarios(destinatarios_raw)
+            # destinatarios_final = aplicar_titulos(destinatarios_cortos)
+            destinatarios_final, cargos = obtener_info_destinatarios(destinatarios_cortos)
             
             # Filtrar nombres conocidos en CC
             cc_filtrado = nombres_conocidos_cc(str(cc))
@@ -478,9 +511,9 @@ def procesar():
                 "Remitente": nompropio_python(remitente_filtrado),
                 "Cargo": cargo,
                 "Facultad/Dependencia": dependencia,
+                "Destinatario": nompropio_python(destinatarios_final),
                 # "Destinatario": nompropio_python(destinatarios_formatted),
-                "Destinatario": nompropio_python(destinatarios_formatted),
-                "Empresa/Cargo": "",
+                "Empresa/Cargo": cargos,
                 "Asunto": nompropio_python(asunto),
                 "Con Copia": cc_filtrado,
                 "Observaciones": observaciones
@@ -494,7 +527,7 @@ def procesar():
     # Crear y exportar excel con registros
     exportar_excel(registros, carpeta_base, f_inicio_str)
  
-PERSONAL_INFO = {
+REMITENTES_CONOCIDOS = {
     # Dirección DIOU
     "Arq. Belty Espinoza Santos": {
         "cargo": "Directora",
@@ -591,7 +624,7 @@ PERSONAL_INFO = {
         "dependencia": "Jefatura de Diseño y Fiscalización"
     },
     "Sr. Bethzaida Villamil": {
-        "cargo": "Asistente 2 Diseño y Planificación (DIOU)",
+        "cargo": "Asistente 2 Diseño y Planificación",
         "dependencia": "Jefatura de Diseño y Fiscalización"
     },
     
@@ -603,16 +636,148 @@ PERSONAL_INFO = {
     "Ing. Jorge Gutiérrez Tenorio":{
         "cargo": "Contratista",
         "dependencia": "JKGT"
+    },
+    "Mgs. Jhair Jiménez":{
+        "cargo": "Director de Compras Públicas",
+        "dependencia": ""
     }
 }
 
-PERSONAL_LIMPIO = {
+REMITENTES_LIMPIO = {
     limpiar_nombre(nombre_original): info
-    for nombre_original, info in PERSONAL_INFO.items()
+    for nombre_original, info in REMITENTES_CONOCIDOS.items()
 }
+
+DESTINATARIOS_CONOCIDOS = {
+    "Belty Espinoza": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Belty Espinoza",
+        "cargo": "Directora DIOU"
+    },
+    "Ricardo Valverde": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Ricardo Valverde",
+        "cargo": "Jefe de Planificación"
+    },
+    "Jhon Araujo": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Jhon Araujo",
+        "cargo": "Analista de Planificación de Obras 3"
+    },
+    "Ader Intriago": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Ader Intriago",
+        "cargo": "Analista de Planificación de Obras 3"
+    },
+    "Jorge Maldonado": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Jorge Maldonado",
+        "cargo": "Analista de Planificación de Obras 3"
+    },
+    "Roberto Vivanco": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Roberto Vivanco",
+        "cargo": "Analista de Planificación de Obras 3"
+    },
+    "Lissette Moreno": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Lissette Moreno",
+        "cargo": "Analista de Planificación de Obras 3"
+    },
+    "Luis Vargas": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Luis Vargas",
+        "cargo": "Analista de Planificación de Obras 3"
+    },
+    "Patricia Fuentes": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Patricia Fuentes",
+        "cargo": "Analista de Planificación 1"
+    },
+    "Narcisa Munoz": {
+        "titulo": "Lic.",
+        "nombre_completo": "Lic. Narcisa Munoz",
+        "cargo": "Asistente de Planificación de Obras 2"
+    },
+    "Leonardo Rodriguez": {
+        "titulo": "Lic.",
+        "nombre_completo": "Lic. Leonardo Rodriguez",
+        "cargo": "Asistente de Planificación de Obras 2"
+    },
+    "Jaime Franco": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Jaime Franco",
+        "cargo": "Asistente 2 de Infraestructura y Obras Universitarias"
+    },
+    "Jhonther Cardenas": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Jhonther Cardenas",
+        "cargo": "Supervisor de Construcciones Civiles"
+    },
+    "Miguel Flores": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Miguel Flores",
+        "cargo": "Jefe de Infraestructura"
+    },
+    "Jorge Tohaquiza": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Jorge Tohaquiza",
+        "cargo": "Analista de Infraestructura de Obras Universitarias 3"
+    },
+    "Humberto Rodriguez": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Humberto Rodriguez",
+        "cargo": "Analista de Mantenimiento de Infraestructura 3"
+    },
+    "Eddy Alfonso": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Eddy Alfonso",
+        "cargo": "Asistente de Infraestructura de Obras Universitarias 2"
+    },
+    "Gilda Suarez": {
+        "titulo": "Sra.",
+        "nombre_completo": "Sra. Gilda Suarez",
+        "cargo": "Asistente de Infraestructura de Obras Universitarias 2"
+    },
+    "Pilar Zalamea": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Pilar Zalamea",
+        "cargo": "Jefe de Diseño y Fiscalización"
+    },
+    "Isaac Munoz": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Isaac Munoz",
+        "cargo": "Analista de Diseño y Fiscalización 1"
+    },
+    "Franklin Medina": {
+        "titulo": "Arq.",
+        "nombre_completo": "Arq. Franklin Medina",
+        "cargo": "Analista de Diseño y Fiscalización 3"
+    },
+    "Victor Velasco": {
+        "titulo": "Ing.",
+        "nombre_completo": "Ing. Victor Velasco",
+        "cargo": "Asistente de Infraestructura 2"
+    },
+    "Bethzaida Villamil": {
+        "titulo": "Sra.",
+        "nombre_completo": "Sra. Bethzaida Villamil",
+        "cargo": "Asistente 2 Diseño y Planificación"
+    },
+    
+    # Otros
+    "Jhair Jiménez":{
+        "titulo": "Mgs.",
+        "nombre_completo": "Mgs. Jhair Jiménez",
+        "cargo": "Director de Compras Públicas"
+    }
+}
+
+# mapa_destinatarios = {
+#     nombre_abreviado(c): c
+#     for c in DESTINATARIOS_CONOCIDOS
+# }
 
 if __name__ == "__main__":
     while True:
         procesar()
-
-
