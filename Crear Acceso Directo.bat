@@ -3,7 +3,7 @@
 REM ====== Rutas ======
 set TARGET=%~dp0\scripts\ejecutar.bat
 set ICON=%~dp0\icons\icono_mail.ico
-set SHORTCUT_PATH=%USERPROFILE%\Desktop\Extractor de Correos y Quipux.lnk
+set SHORTCUT_PATH=%USERPROFILE%\Desktop\Extractor de Correos.lnk
 @REM set VBS=%TEMP%\shortcut.vbs
 
 @REM Convertir rutas a formato PowerShell seguro
