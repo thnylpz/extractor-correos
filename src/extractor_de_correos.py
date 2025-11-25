@@ -119,11 +119,11 @@ def nombres_conocidos_rem(rem):
     autorizados = [
         "Arq. Belty Espinoza Santos", "Arq. Ricardo Valverde Paredes", "Ing. Jhon Araujo Borjas", "Arq. Ader Intriago Arteaga",
         "Ing. Jorge Maldonado Granizo", "Arq. Roberto Vivanco Calderon", "Ing. Lissette Moreno Balladares",
-        "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa A. Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
+        "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
         "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
         "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Sra. Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
         "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil",
-        "Ab. María Marroquín Mora", "Ing. Jorge Gutiérrez Tenorio"
+        "Ab. María Marroquín Mora", "Ing. Jorge Gutiérrez Tenorio", "Mgs. Jhair Jiménez Aldaz"
     ]
     rem_norm = quitar_acentos(rem.lower())
     resultado = []
@@ -567,7 +567,7 @@ REMITENTES_CONOCIDOS = {
         "cargo": "Analista de Planificación 1",
         "dependencia": "Jefatura de Planificación"
     },
-    "Lic. Narcisa A. Muñoz Feraud": {
+    "Lic. Narcisa Muñoz Feraud": {
         "cargo": "Asistente de Planificación de Obras 2",
         "dependencia": "Jefatura de Planificación"
     },
@@ -637,7 +637,7 @@ REMITENTES_CONOCIDOS = {
         "cargo": "Contratista",
         "dependencia": "JKGT"
     },
-    "Mgs. Jhair Jiménez":{
+    "Mgs. Jhair Jiménez Aldaz":{
         "cargo": "Director de Compras Públicas",
         "dependencia": ""
     }
@@ -766,9 +766,9 @@ DESTINATARIOS_CONOCIDOS = {
     },
     
     # Otros
-    "Jhair Jiménez":{
+    "Jhair Jimenez":{
         "titulo": "Mgs.",
-        "nombre_completo": "Mgs. Jhair Jiménez",
+        "nombre_completo": "Mgs. Jhair Jimenez",
         "cargo": "Director de Compras Públicas"
     }
 }
