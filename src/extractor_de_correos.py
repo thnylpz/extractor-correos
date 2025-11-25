@@ -386,6 +386,7 @@ def pedir_fecha():
     return fecha_inicio_raw, fecha_fin_raw, fecha_inicio_str, mes_name, anio
 
 def procesar():
+    print("DEVELOP")
     print("=== Exportador de Correos y Anexos ===", end="\n\n")
         
     # Inicializa colorama
