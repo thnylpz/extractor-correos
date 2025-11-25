@@ -17,8 +17,40 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from colorama import init, Fore
 
+# FUNCIONES NO UTILIZADAS
+def show_menu():
+    while True:
+        print("=== Exportador de Correos y Quipux ===", end="\n\n")
+        print("1. Correos\n2. Quipux")
+            
+        opcion = input("\nOpción: ")
+        tipo = ""
+            
+        if(opcion == "1" ):
+            os.system("cls")
+            tipo = "correo"
+            procesar(tipo)
+        elif (opcion == "2"):
+            os.system("cls")
+            tipo = "quipux"
+            procesar(tipo)
+        else:
+            break
+
+#
+def formato_des(destinatario: str) -> str:
+    if not destinatario:
+        return ""
+    
+    # Outlook suele devolver algo como: "Juan <juan@mail.com>; Maria <maria@mail.com>"
+    partes = [p.strip() for p in destinatario.split(";") if p.strip()]
+    
+    # Unir con salto de línea
+    return "\n".join(partes)
+
+###
+
 def limpiar_texto(nombre):
-    """Limpia nombres de archivo sin eliminar la extensión."""
     if not nombre:
         return ""
     nombre = str(nombre).strip()
@@ -29,12 +61,6 @@ def limpiar_texto(nombre):
         base, ext = m.group(1), "." + m.group(2).lower()
     else:
         base, ext = nombre, ""
-
-    # Separar nombre y extensión
-    # base, ext = os.path.splitext(nombre)
-
-    # Reemplazar caracteres inválidos solo en la parte base
-    # base = re.sub(r'[\\/:\*\?"<>\|\r\n\t]', "_", base)
     
     # Reemplazar caracteres inválidos + comillas Unicode
     base = re.sub(
@@ -64,8 +90,7 @@ def quitar_acentos(texto):
         texto = texto.replace(a, b)
     return texto
 
-def filtrar_cc(cc):
-    """Filtra nombres autorizados del campo CC."""
+def nombres_conocidos_cc(cc):
     if not cc:
         return "-----"
     autorizados = [
@@ -89,7 +114,6 @@ def filtrar_cc(cc):
         return "\n".join(resultado)
 
 def nombres_conocidos_rem(rem):
-    """Pone el título a los nombres que aparecen en la lista, en el campo remitente"""
     if not rem:
         return ""
     autorizados = [
@@ -99,14 +123,14 @@ def nombres_conocidos_rem(rem):
         "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
         "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
         "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil",
-        "Ab. María Marroquín Mora"
+        "Ab. María Marroquín Mora", "Ing. Jorge Gutiérrez Tenorio"
     ]
     rem_norm = quitar_acentos(rem.lower())
     resultado = []
     for nombre in autorizados:
         n_norm = quitar_acentos(nombre.lower())
         partes = n_norm.split()
-        if len(partes) >= 2 and partes[1] in rem_norm and partes[-1] in rem_norm:
+        if len(partes) >= 2 and partes[1] in rem_norm and partes[2] in rem_norm:
             resultado.append(nombre)
     
     if len(resultado) == 0:
@@ -114,38 +138,51 @@ def nombres_conocidos_rem(rem):
     else:
         return "\n".join(resultado)
 
-def nombres_conocidos_des(des, tipo):
-    """Pone el título a los nombres que aparecen en la lista, en el campo remitente"""
-    if not des:
+def formato_destinatarios(destinatario: str) -> str:
+    if not destinatario:
         return ""
-    autorizados = [
-        "Arq. Belty Espinoza Santos", "Arq. Ricardo Valverde Paredes", "Ing. Jhon Araujo Borjas", "Arq. Ader Intriago Arteaga",
-        "Ing. Jorge Maldonado Granizo", "Arq. Roberto Vivanco Calderon", "Ing. Lissette Moreno Balladares",
-        "Ing. Luis Vargas Orozco", "Ing. Patricia Fuentes Moran", "Lic. Narcisa A. Munoz Feraud", "Lic. Leonardo Rodriguez Molina",
-        "Ing. Jaime Franco Baquerizo", "Arq. Jhonther Cardenas", "Ing. Miguel Flores Poveda", "Ing. Jorge Tohaquiza Jacho",
-        "Ing. Humberto Rodriguez Gonzalez", "Ing. Eddy Alfonso Garcia", "Gilda Suarez Crespin", "Arq. Pilar Zalamea Garcia",
-        "Ing. Isaac Munoz Mindiola", "Arq. Franklin Medina Gonzalez", "Ing. Victor Velasco Matute", "Sra. Bethzaida Villamil",
-        "Ab. María Marroquín Mora"
-    ]
-    des_norm = quitar_acentos(des.lower())
-    resultado = []
-    for nombre in autorizados:
-        n_norm = quitar_acentos(nombre.lower())
-        partes = n_norm.split()
-        if(tipo == "quipux"):
-            if len(partes) >= 2 and partes[1] in des_norm and partes[-1] in des_norm:
-                resultado.append(nombre)
     
-    if len(resultado) == 0:
-        return des
-    else:
-        return "\n".join(resultado)
+    # Separar por ; o ,
+    personas = re.split(r'[;,]', destinatario)
+    resultado = []
+
+    for p in personas:
+        p = p.strip()
+        if not p:
+            continue
+
+        # Quitar el correo dentro de <>
+        p = re.sub(r"<.*?>", "", p).strip()
+
+        partes = p.split()
+        
+        if len(partes) == 1:
+            # Solo una palabra → se deja igual
+            resultado.append(partes[0])
+        elif len(partes) == 2:
+            # nombre + apellido
+            nombre = partes[0]
+            apellido = partes[1]
+            resultado.append(f"{nombre} {apellido}")
+        else:
+            # 3 o más → penúltima palabra es primer apellido
+            nombre = partes[0]
+            apellido = partes[-2]
+            resultado.append(f"{nombre} {apellido}")
+
+        # # Si vienen 2 nombres + 2 apellidos
+        # if len(partes) == 4:
+        #     nombre = partes[0]       # primer nombre
+        #     apellido = partes[2]     # primer apellido
+        #     resultado.append(f"{nombre} {apellido}")
+        # else:
+        #     # fallback: tomar solo la primera palabra
+        #     resultado.append(partes[0])
+
+    # Unir con salto de línea
+    return "\n".join(resultado)
 
 def obtener_info_persona(remitente):
-    """
-    Devuelve (cargo, dependencia) aunque el remitente llegue sin título,
-    abreviado, en otro orden o en minúsculas.
-    """
     nombre_limpio = limpiar_nombre(remitente)
     palabras = nombre_limpio.split()
 
@@ -175,7 +212,7 @@ def limpiar_nombre(nombre):
     )
 
     # quitar títulos comunes
-    nombre = re.sub(r'\b(arq|ing|lic|sr|sra|dra|dr)\.?', '', nombre)
+    nombre = re.sub(r'\b(arq|ing|lic|sr|sra|dra|dr|ab)\.?', '', nombre)
 
     # quitar puntos y comas
     nombre = nombre.replace('.', '').replace(',', '')
@@ -188,16 +225,275 @@ def limpiar_nombre(nombre):
 def nompropio_python(asunto):
     return asunto.title()
 
-def limpiar_destinatarios(cadena_to: str) -> str:
-    if not cadena_to:
-        return ""
-    
-    # Outlook suele devolver algo como: "Juan <juan@mail.com>; Maria <maria@mail.com>"
-    partes = [p.strip() for p in cadena_to.split(";") if p.strip()]
-    
-    # Unir con salto de línea
-    return "\n".join(partes)
+def exportar_excel(registros, carpeta_base, fecha_inicio_str):
+    # === Exportar resultados a Excel con formato ===
+    if registros:
+        df = pd.DataFrame(registros)
+        
+        ruta_excel = carpeta_base / f"{fecha_inicio_str}_CorreosExportados.xlsx"
+        
+        df.to_excel(ruta_excel, index=False)
 
+        # === Aplicar formato con openpyxl ===
+        wb = load_workbook(ruta_excel)
+        ws = wb.active
+
+        # Cuerpo
+        for row in ws.iter_rows():
+            for celda in row:
+                celda.font = Font(name="Arial", size=12)
+                # if celda.value is not None:   # opcional: solo celdas con contenido
+                celda.alignment = Alignment(wrap_text=True, horizontal="left", vertical="top")
+
+        for celda in ws["I"]:
+            celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
+            celda.alignment = Alignment(horizontal="center", vertical="center")
+
+        # Encabezados
+        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+
+        for col in range(1, ws.max_column + 1):
+            cell = ws.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
+
+        # Bordes
+        thin_border = Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin")
+        )
+
+        # Aplicar bordes a las celdas
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+            for cell in row:
+                cell.border = thin_border
+
+        # Ajustar ancho de columnas
+        for col in ws.columns:
+            column = get_column_letter(col[0].column)
+            ws.column_dimensions[column].width = 20.71
+        
+        ws.column_dimensions["G"].width = 30.71
+        ws.column_dimensions["I"].width = 30.71
+        
+        # Ajustar alto de filas
+        for row in ws.iter_rows():
+            celda = row[0]
+            ws.row_dimensions[celda.row+1].height = 150.04
+
+        # Convertir a tabla con estilo
+        ultima_fila = ws.max_row
+        ultima_col = ws.max_column
+        rango_tabla = f"A1:{get_column_letter(ultima_col)}{ultima_fila}"
+
+        # Llenar con color amarillo las celdas vacías
+        body_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") #amarillo
+        
+        for fila in ws[rango_tabla]:     # fila = tuple de celdas
+            for celda in fila:           # celda = objeto real de openpyxl
+                if celda.value is None or celda.value == "":
+                    celda.fill = body_fill
+
+        # Tabla
+        tabla = Table(displayName="Exportados", ref=rango_tabla)
+        estilo = TableStyleInfo(
+            name="TableStyleMedium2",
+            showRowStripes=True,
+            showColumnStripes=False
+        )
+        tabla.tableStyleInfo = estilo
+        ws.add_table(tabla)
+        ws.sheet_view.zoomScale = 80 # Ajustar zoom
+        wb.save(ruta_excel)
+
+        print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} registros.")
+        input("\nPresione ENTER para abrir la carpeta.")
+        os.system("cls")
+        os.startfile(carpeta_base)
+    else:
+        print(Fore.RED + "\n\nNo se encontraron Correos en el rango especificado.")
+        input("\nPresione ENTER para continuar.")
+        os.system("cls")    
+
+def obtener_anexos(anexos, carpeta_correo):
+    lista_anexos = []
+
+    if anexos.Count > 0:
+        # i = 0
+        for anexo in anexos:
+            nombre_archivo = limpiar_texto(anexo.FileName)
+            if "image" not in nombre_archivo.lower() and "outlook" not in nombre_archivo.lower():
+                carpeta_anexos = carpeta_correo / "Anexos"
+                os.makedirs(carpeta_anexos, exist_ok=True) # crear carpeta de anexos   
+                ruta_anexo = carpeta_anexos / nombre_archivo
+                anexo.SaveAsFile(str(ruta_anexo))
+                # i+=1
+                lista_anexos.append(nombre_archivo)
+    return lista_anexos
+
+def pedir_fecha():
+    dia = input("Día (1-31): ")
+    mes = input("Mes (1-12): ")
+    anio = input("Año (4 dígitos): ")
+    
+    # Fechas en formato datetime
+    fecha_inicio_raw = datetime(int(anio), int(mes), int(dia), 0, 0, 0)
+    fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
+
+    # Fecha inicio en string
+    fecha_inicio_str = fecha_inicio_raw.strftime("%Y-%m-%d")
+
+    # Obtener nombre del mes
+    meses = {1:"Enero", 2:"Febrero", 3:"Marzo", 4:"Abril", 5:"Mayo", 6:"Junio", 7:"Julio", 8:"Agosto", 9:"Septiembre", 10:"Octubre", 11:"Noviembre", 12:"Diciembre"}
+    mes_int= int(mes)
+    mes_name = meses[mes_int]
+    
+    return fecha_inicio_raw, fecha_fin_raw, fecha_inicio_str, mes_name, anio
+
+def procesar():
+    print("=== Exportador de Correos y Anexos ===", end="\n\n")
+        
+    # Inicializa colorama
+    init(autoreset=True)  # Después de cada print el color vuelva al normal
+
+    # Pedir fechas al usuario
+    f_inicio, f_fin, f_inicio_str, mes_name, anio = pedir_fecha()
+    
+    # Ruta carpeta base "Correos Agosto - 2025 / 2025-08-30"
+    carpeta_base = Path.home() / "Downloads" / f"Correos {mes_name} - {anio}" / f_inicio_str
+    
+    # Conectar con Outlook
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    carpeta = outlook.GetDefaultFolder(6)  # 6 = Bandeja de entrada
+
+    # Filtro para Outlook
+    filtro = f"[ReceivedTime] >= '{f_inicio.strftime('%d/%m/%Y %H:%M')}' AND [ReceivedTime] < '{f_fin.strftime('%d/%m/%Y %H:%M')}'"
+    
+    # Obtener correos filtrados
+    items = carpeta.Items
+    items.Sort("[ReceivedTime]", False)   # True = descendente, False = ascendente
+    items_filtrados = items.Restrict(filtro)
+    
+    # Abrir Word
+    word = win32com.client.Dispatch("Word.Application")
+    word.Visible = False
+    
+    # Mostrar "Procesando"
+    if len(items_filtrados) > 0:
+        print("\nProcesando", end="")
+    
+    # Array de registros
+    registros = []
+    
+    # Pausa corta
+    time.sleep(0.5)
+
+    for mail in items_filtrados:
+        try:
+            # Si no es correo, omitir
+            if mail.Class != 43:
+                continue
+            
+            # Setear info del correo
+            recibido = mail.ReceivedTime
+            remitente = mail.SenderName
+            anexos = mail.Attachments
+            asunto = mail.Subject or ""
+            destinatario = mail.To
+            cc = mail.CC or ""
+            
+            # Fecha python
+            recibido_py = datetime(recibido.year, recibido.month, recibido.day,
+                                recibido.hour, recibido.minute, recibido.second)
+
+            # Si no está dentro del rango, omitir
+            if not (f_inicio <= recibido_py < f_fin):
+                continue
+            
+            # Si contiene esto en remitente, omitir
+            if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE", "Zoom", "Titulares EL UNIVERSO", "Canva", "ClickUp Notifications", "ClickUp Team", "DepositPhotos"]:
+                continue
+            
+            # . . .
+            print(".", end="", flush=True)
+            
+            # Crear carpeta del correo
+            id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_texto(remitente)
+            carpeta_nombre = f"{id_correo}"
+            
+            # Acortar nombre de carpeta
+            if len(carpeta_nombre) > 100:
+                carpeta_nombre = carpeta_nombre[:100]
+
+            # Crear carpeta del día
+            carpeta_base.mkdir(parents=True, exist_ok=True)
+            carpeta_correo = carpeta_base / carpeta_nombre
+            os.makedirs(carpeta_correo, exist_ok=True)
+
+            asunto_limpio = limpiar_texto(asunto)
+
+            # Rutas para guardar correo
+            mht_path = carpeta_correo / f"{asunto_limpio}.mht"
+            pdf_path = carpeta_correo / f"{asunto_limpio}.pdf"
+            msg_path = carpeta_correo / f"{asunto_limpio}.msg"
+
+            # Conversión del correo a .pdf
+            try:
+                mail.SaveAs(str(mht_path), 10)
+                doc = word.Documents.Open(str(mht_path))
+                doc.ExportAsFixedFormat(OutputFileName=str(pdf_path), ExportFormat=17)
+                doc.Close(False)
+                os.remove(mht_path)
+            except Exception:
+                mail.SaveAs(str(msg_path), 3)
+            
+            # Agregar título a remitente conocido
+            remitente_filtrado = nombres_conocidos_rem(remitente)
+            
+            # Obtener cargo y facultad del remitente conocido
+            cargo, dependencia = obtener_info_persona(remitente)
+            
+            # Obtener lista de destinatarios con saltos de línea
+            destinatarios_formatted = formato_destinatarios(destinatario)
+            
+            # Filtrar nombres conocidos en CC
+            cc_filtrado = nombres_conocidos_cc(str(cc))
+            
+            # Guardar Anexos
+            lista_anexos = obtener_anexos(anexos, carpeta_correo)
+            
+            # Obtener cantidad de anexos
+            cant_anexos = len(lista_anexos)
+            
+            # Mostrar cantidad de anexos
+            observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
+
+            # Guardar registros
+            registros.append({
+                "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
+                "Remitente": nompropio_python(remitente_filtrado),
+                "Cargo": cargo,
+                "Facultad/Dependencia": dependencia,
+                # "Destinatario": nompropio_python(destinatarios_formatted),
+                "Destinatario": nompropio_python(destinatarios_formatted),
+                "Empresa/Cargo": "",
+                "Asunto": nompropio_python(asunto),
+                "Con Copia": cc_filtrado,
+                "Observaciones": observaciones
+            })
+        except Exception as e:
+            print(f"Error procesando correo: {e}")
+
+    # Cerrar Word
+    word.Quit()
+    
+    # Crear y exportar excel con registros
+    exportar_excel(registros, carpeta_base, f_inicio_str)
+ 
 PERSONAL_INFO = {
     # Dirección DIOU
     "Arq. Belty Espinoza Santos": {
@@ -303,6 +599,10 @@ PERSONAL_INFO = {
     "Ab. María Marroquín Mora": {
         "cargo": "Analista de Talento Humano",
         "dependencia": "DIOU"
+    },
+    "Ing. Jorge Gutiérrez Tenorio":{
+        "cargo": "Contratista",
+        "dependencia": "JKGT"
     }
 }
 
@@ -311,286 +611,7 @@ PERSONAL_LIMPIO = {
     for nombre_original, info in PERSONAL_INFO.items()
 }
 
-def mostrar_menu():
-    while True:
-        print("=== Exportador de Correos y Quipux ===", end="\n\n")
-        print("1. Correos\n2. Quipux")
-            
-        opcion = input("\nOpción: ")
-        tipo = ""
-            
-        if(opcion == "1" ):
-            os.system("cls")
-            tipo = "correo"
-            extraer(tipo)
-        elif (opcion == "2"):
-            os.system("cls")
-            tipo = "quipux"
-            extraer(tipo)
-        else:
-            break
-
-def exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo):
-    # === Exportar resultados a Excel con formato ===
-    if registros:
-        df = pd.DataFrame(registros)
-        if(tipo=="correo"):
-            ruta_excel = carpeta_base / f"{fecha_inicio_str}_CorreosExportados.xlsx"
-        elif(tipo == "quipux"):
-            ruta_excel = carpeta_base / f"{fecha_inicio_str}_QuipuxExportados.xlsx"
-        
-        df.to_excel(ruta_excel, index=False)
-
-        # === Aplicar formato con openpyxl ===
-        wb = load_workbook(ruta_excel)
-        ws = wb.active
-
-        # Cuerpo
-        for row in ws.iter_rows():
-            for celda in row:
-                celda.font = Font(name="Arial", size=12)
-                if celda.value is not None:   # opcional: solo celdas con contenido
-                    celda.alignment = Alignment(wrap_text=True, horizontal="left", vertical="top")
-
-        if(tipo=="correo"):
-            for celda in ws["I"]:
-                celda.font = Font(name="Arial", size=12, color="FF0000", bold=True)  # rojo
-                celda.alignment = Alignment(horizontal="center", vertical="center")
-
-        # Encabezados
-        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
-        header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-
-        for col in range(1, ws.max_column + 1):
-            cell = ws.cell(row=1, column=col)
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
-
-        # Bordes
-        thin_border = Border(
-            left=Side(style="thin"),
-            right=Side(style="thin"),
-            top=Side(style="thin"),
-            bottom=Side(style="thin")
-        )
-
-        # Aplicar bordes a las celdas
-        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
-            for cell in row:
-                cell.border = thin_border
-
-        # Ajustar ancho de columnas
-        for col in ws.columns:
-            column = get_column_letter(col[0].column)
-            ws.column_dimensions[column].width = 20.71
-
-        if(tipo=="correo"):
-            ws.column_dimensions["G"].width = 30.71
-            ws.column_dimensions["I"].width = 30.71
-        elif(tipo == "quipux"):
-            ws.column_dimensions["E"].width = 30.71
-        
-        # Ajustar alto de filas
-        for row in ws.iter_rows():
-            celda = row[0]
-            ws.row_dimensions[celda.row+1].height = 150.04
-
-        # Convertir a tabla con estilo
-        ultima_fila = ws.max_row
-        ultima_col = ws.max_column
-        rango_tabla = f"A1:{get_column_letter(ultima_col)}{ultima_fila}"
-
-        # Llenar con color amarillo las celdas vacías
-        body_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") #amarillo
-        
-        for fila in ws[rango_tabla]:     # fila = tuple de celdas
-            for celda in fila:           # celda = objeto real de openpyxl
-                if celda.value is None or celda.value == "":
-                    celda.fill = body_fill
-
-        # Tabla
-        tabla = Table(displayName="Exportados", ref=rango_tabla)
-        estilo = TableStyleInfo(
-            name="TableStyleMedium2",
-            showRowStripes=True,
-            showColumnStripes=False
-        )
-        tabla.tableStyleInfo = estilo
-        ws.add_table(tabla)
-        ws.sheet_view.zoomScale = 80 # Ajustar zoom
-        wb.save(ruta_excel)
-
-        print(Fore.GREEN + f"\n\nExportación completada correctamente: {len(registros)} registros.")
-        input("\nPresione ENTER para abrir la carpeta.")
-        os.system("cls")
-        os.startfile(carpeta_base)
-    else:
-        if(tipo=="correo"):
-            print(Fore.RED + "\n\nNo se encontraron Correos en el rango especificado.")
-        elif(tipo == "quipux"):
-            print(Fore.RED + "\n\nNo se encontraron Quipux en el rango especificado.")
-        input("\nPresione ENTER para continuar.")
-        os.system("cls")    
-
-def extraer(tipo):
-    if(tipo == "correo"):
-        print("=== Exportador de Correos y Anexos ===", end="\n\n")
-    elif(tipo == "quipux"):
-        print("=== Exportador de Quipux ===", end="\n\n")
-        
-    # Inicializa colorama
-    init(autoreset=True)  # Después de cada print el color vuelva al normal
-
-    # Pedir fechas al usuario
-    dia = input("Día (1-31): ")
-    mes = input("Mes (1-12): ")
-    anio = input("Año (4 dígitos): ")
-    
-    fecha_inicio_raw = datetime(int(anio), int(mes), int(dia), 0, 0, 0)
-    fecha_fin_raw = fecha_inicio_raw + timedelta(days=1)
-
-    fecha_inicio_str = fecha_inicio_raw.strftime("%Y-%m-%d")
-
-    mes_int= int(mes)
-
-    meses = {1:"Enero", 2:"Febrero", 3:"Marzo", 4:"Abril",
-                5:"Mayo", 6:"Junio", 7:"Julio", 8:"Agosto",
-                9:"Septiembre", 10:"Octubre", 11:"Noviembre", 12:"Diciembre"}
-
-    mes_str = meses[mes_int]
-    
-    # Crear carpeta del día
-    if(tipo == "correo"):
-        carpeta_base = Path.home()/"Downloads"/f"Correos {mes_str} - {anio}"/fecha_inicio_str
-    elif(tipo == "quipux"):
-        carpeta_base = Path.home()/"Downloads"/f"Quipux {mes_str} - {anio}"/fecha_inicio_str
-    
-    # Conectar con Outlook
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    carpeta = outlook.GetDefaultFolder(6)  # 6 = Bandeja de entrada
-
-    registros = []
-
-    filtro = f"[ReceivedTime] >= '{fecha_inicio_raw.strftime('%d/%m/%Y %H:%M')}' AND [ReceivedTime] < '{fecha_fin_raw.strftime('%d/%m/%Y %H:%M')}'"
-    
-    items = carpeta.Items
-    items.Sort("[ReceivedTime]", False)   # True = descendente, False = ascendente
-    items_filtrados = items.Restrict(filtro)
-    
-    word = win32com.client.Dispatch("Word.Application")
-    word.Visible = False
-    
-    if len(items_filtrados) > 0:
-        print("\nProcesando", end="")
-        
-    time.sleep(2)
-
-    for mail in items_filtrados:
-        try:
-            if mail.Class != 43:
-                continue
-
-            remitente = mail.SenderName
-            destinatario = mail.To
-            asunto = mail.Subject or ""
-            cc = mail.CC or ""
-
-            recibido = mail.ReceivedTime
-            recibido_py = datetime(recibido.year, recibido.month, recibido.day,
-                                recibido.hour, recibido.minute, recibido.second)
-
-            if not (fecha_inicio_raw <= recibido_py < fecha_fin_raw):
-                continue
-            
-            if(tipo == "correo"):
-                if remitente in ["QUIPUX", "UNIVERSIDAD DE GUAYAQUIL", "INFO UG", "Comunicados DVSBE", "Zoom", "Titulares EL UNIVERSO", "Canva",
-                                 "ClickUp Notifications", "ClickUp Team", "DepositPhotos"]:
-                    continue
-            elif(tipo == "quipux"):
-                if remitente not in ["QUIPUX"]:
-                    continue
-            
-            print(".", end="", flush=True)
-            
-            id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_texto(remitente)
-            asunto_limpio = limpiar_texto(asunto)
-            carpeta_nombre = f"{id_correo}"
-            if len(carpeta_nombre) > 100:
-                carpeta_nombre = carpeta_nombre[:100]
-
-            carpeta_base.mkdir(parents=True, exist_ok=True) # crear carpeta base
-
-            carpeta_correo = carpeta_base / carpeta_nombre
-            os.makedirs(carpeta_correo, exist_ok=True) # crear carpeta de correo
-
-            lista_anexos = []
-
-            if mail.Attachments.Count > 0:
-                i = 0
-                for anexo in mail.Attachments:
-                    nombre_archivo = limpiar_texto(anexo.FileName)
-                    if "image" not in nombre_archivo.lower() and "outlook" not in nombre_archivo.lower():
-                        carpeta_anexos = carpeta_correo / "Anexos"
-                        os.makedirs(carpeta_anexos, exist_ok=True) # crear carpeta de anexos   
-                        ruta_anexo = carpeta_anexos / nombre_archivo
-                        anexo.SaveAsFile(str(ruta_anexo))
-                        i+=1
-                        lista_anexos.append(i)
-
-            # Rutas para guardar correo
-            mht_path = carpeta_correo / f"{asunto_limpio}.mht"
-            pdf_path = carpeta_correo / f"{asunto_limpio}.pdf"
-            msg_path = carpeta_correo / f"{asunto_limpio}.msg"
-
-            # Conveersión del correo a .pdf
-            try:
-                mail.SaveAs(str(mht_path), 10)
-                doc = word.Documents.Open(str(mht_path))
-                doc.ExportAsFixedFormat(OutputFileName=str(pdf_path), ExportFormat=17)
-                doc.Close(False)
-                os.remove(mht_path)
-            except Exception:
-                mail.SaveAs(str(msg_path), 3)
-            
-            # Procesos antes de guardar los datos
-            cargo, dependencia = obtener_info_persona(remitente)
-            
-            cant_anexos = len(lista_anexos)
-            observaciones = "No contiene anexos" if cant_anexos == 0 else f"Anexa {cant_anexos} documento(s)"
-
-            cc_filtrado = filtrar_cc(str(cc))
-            remitente_filtrado = nombres_conocidos_rem(remitente)
-            lista_destinatarios = limpiar_destinatarios(destinatario)
-            destinatarios = nombres_conocidos_des(lista_destinatarios, tipo)
-            cargo_destinatario, dependencia_destinatario = obtener_info_persona(destinatario)
-
-            # Guardar datos del correo/quipux
-            if(tipo=="correo"):
-                registros.append({
-                    "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Remitente": nompropio_python(remitente_filtrado),
-                    "Cargo": cargo,
-                    "Facultad/Dependencia": dependencia,
-                    "Destinatario": nompropio_python(lista_destinatarios),
-                    "Empresa/Cargo": "",
-                    "Asunto": nompropio_python(asunto),
-                    "Con Copia": cc_filtrado,
-                    "Observaciones": observaciones
-                })
-            elif(tipo == "quipux"):
-                registros.append({
-                    "Fecha del Documento": recibido_py.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Remitente": nompropio_python(remitente_filtrado),
-                    "Destinatario": nompropio_python(destinatarios),
-                    "Empresa/Cargo": cargo_destinatario,
-                    "Asunto": nompropio_python(asunto)
-                })
-        except Exception as e:
-            print(f"Error procesando correo: {e}")
-    word.Quit()
-    exportar_excel(registros, carpeta_base, fecha_inicio_str, tipo)
- 
 if __name__ == "__main__":
-    mostrar_menu()
+    while True:
+        procesar()
 
