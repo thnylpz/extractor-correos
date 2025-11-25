@@ -346,7 +346,7 @@ def exportar_excel(registros, carpeta_base, fecha_inicio_str):
         os.system("cls")
         os.startfile(carpeta_base)
     else:
-        print(Fore.YELLOW + "\n\nNo se encontraron Correos en el rango especificado.")
+        print(Fore.RED + "\n\nNo se encontraron Correos en el rango especificado.")
         input("\nPresione ENTER para continuar.")
         os.system("cls")    
 
@@ -781,4 +781,3 @@ DESTINATARIOS_CONOCIDOS = {
 if __name__ == "__main__":
     while True:
         procesar()
-
