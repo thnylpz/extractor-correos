@@ -17,39 +17,28 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from colorama import init, Fore
 
-# FUNCIONES NO UTILIZADAS
-def show_menu():
-    while True:
-        print("=== Exportador de Correos y Quipux ===", end="\n\n")
-        print("1. Correos\n2. Quipux")
-            
-        opcion = input("\nOpción: ")
-        tipo = ""
-            
-        if(opcion == "1" ):
-            os.system("cls")
-            tipo = "correo"
-            procesar(tipo)
-        elif (opcion == "2"):
-            os.system("cls")
-            tipo = "quipux"
-            procesar(tipo)
-        else:
-            break
-
-#
-def formato_des(destinatario: str) -> str:
-    if not destinatario:
+def limpiar_acortar_remitentes(texto):
+    if not texto:
         return ""
+    texto = str(texto).strip()
     
-    # Outlook suele devolver algo como: "Juan <juan@mail.com>; Maria <maria@mail.com>"
-    partes = [p.strip() for p in destinatario.split(";") if p.strip()]
+    # Reemplazar caracteres inválidos + comillas Unicode
+    texto = re.sub(
+        r'[\\/:*?"<>|\r\n\t“”‘’´`]',
+        "_",
+        texto
+    )
     
-    # Unir con salto de línea
-    return "\n".join(partes)
+    # Normalizar espacios
+    texto = re.sub(r'\s+', " ", texto)
+    texto = texto.strip()
 
-###
+    # Limitar longitud
+    if len(texto) > 45:
+        texto = texto[:45]
 
+    return f"{texto}"
+    
 def limpiar_texto(nombre):
     if not nombre:
         return ""
@@ -138,7 +127,7 @@ def nombres_conocidos_rem(rem):
     else:
         return "\n".join(resultado)
 
-def acortar_destinatarios(destinatario: str) -> str:
+def cut_nombres_destinatarios(destinatario: str) -> str:
     if not destinatario:
         return ""
     
@@ -183,10 +172,6 @@ def acortar_destinatarios(destinatario: str) -> str:
     # return "\n".join(resultado)
     return resultado
 
-# def nombre_abreviado(nombre):
-#     partes = nombre.split()
-#     return f"{partes[0]} {partes[1]}"  # ignora título y toma "Nombre Apellido"
-
 def obtener_info_destinatarios(lista_nombres):
     destinatarios = []
     cargos = []
@@ -201,17 +186,6 @@ def obtener_info_destinatarios(lista_nombres):
             # cargos.append("")
             
     return ("\n\n".join(destinatarios)), ("\n\n".join(cargos))
-
-# def aplicar_titulos(lista_nombres):
-#     resultado = []
-#     for n in lista_nombres:
-#         nn = nompropio_python(n)
-#         if nn in mapa_destinatarios:
-#             resultado.append(mapa_destinatarios[nn])
-#         else:
-#             resultado.append(n)  # si no está en la lista, lo dejas tal cual
-#     # return resultado
-#     return "\n".join(resultado)
 
 def obtener_info_remitente(remitente):
     nombre_limpio = limpiar_nombre(remitente)
@@ -454,7 +428,8 @@ def procesar():
             print(".", end="", flush=True)
             
             # Crear carpeta del correo
-            id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_texto(remitente)
+            # id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_texto(remitente)
+            id_correo = recibido_py.strftime("%H%M%S") + "_" + limpiar_acortar_remitentes(remitente)
             carpeta_nombre = f"{id_correo}"
             
             # Acortar nombre de carpeta
@@ -490,7 +465,7 @@ def procesar():
             cargo, dependencia = obtener_info_remitente(remitente)
             
             # Obtener lista de destinatarios con saltos de línea
-            destinatarios_cortos = acortar_destinatarios(destinatarios_raw)
+            destinatarios_cortos = cut_nombres_destinatarios(destinatarios_raw)
             # destinatarios_final = aplicar_titulos(destinatarios_cortos)
             destinatarios_final, cargos = obtener_info_destinatarios(destinatarios_cortos)
             
@@ -773,11 +748,6 @@ DESTINATARIOS_CONOCIDOS = {
         "cargo": "Director de Compras Públicas"
     }
 }
-
-# mapa_destinatarios = {
-#     nombre_abreviado(c): c
-#     for c in DESTINATARIOS_CONOCIDOS
-# }
 
 if __name__ == "__main__":
     while True:
