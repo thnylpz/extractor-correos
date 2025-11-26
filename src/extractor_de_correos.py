@@ -360,6 +360,7 @@ def pedir_fecha():
     return fecha_inicio_raw, fecha_fin_raw, fecha_inicio_str, mes_name, anio
 
 def procesar():
+    print("DEVELOP")
     print("=== Exportador de Correos y Anexos ===", end="\n\n")
         
     # Inicializa colorama
@@ -369,7 +370,7 @@ def procesar():
     f_inicio, f_fin, f_inicio_str, mes_name, anio = pedir_fecha()
     
     # Ruta carpeta base "Correos Agosto - 2025 / 2025-08-30"
-    carpeta_base = Path.home() / "Downloads" / f"Correos {mes_name} - {anio}" / f_inicio_str
+    carpeta_base = Path.home() / "Desktop" / f"Correos {mes_name} - {anio}" / f_inicio_str
     
     # Conectar con Outlook
     outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
