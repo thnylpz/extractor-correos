@@ -451,6 +451,16 @@ def procesar():
             try:
                 mail.SaveAs(str(mht_path), 10)
                 doc = word.Documents.Open(str(mht_path))
+                
+                 # Ajustar tamaño de todas las imágenes (max ancho 500 pts aprox)
+                for shape in doc.InlineShapes:
+                    if shape.Type in [1, 3, 4, 5]:  # Tipos de imagen: 1=Embedded, 3=Linked, etc.
+                        max_width = 800  # puedes ajustar
+                        if shape.Width > max_width:
+                            ratio = max_width / shape.Width
+                            shape.Width = max_width
+                            shape.Height = shape.Height * ratio
+                
                 doc.ExportAsFixedFormat(OutputFileName=str(pdf_path), ExportFormat=17)
                 doc.Close(False)
                 os.remove(mht_path)
