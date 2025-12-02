@@ -1,6 +1,6 @@
 @echo off
 
-REM --- Ir a la carpeta donde está el BAT ---
+REM --- Ir a la carpeta donde está el .py ---
 cd /d "%~dp0\..\src"
 
 REM --- Actualizar desde Github ---
@@ -12,7 +12,7 @@ REM --- Verificar si Python está instalado ---
 python --version >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
     echo ERROR: Python no esta instalado en esta PC.
-    echo Por favor instala Python desde: https://www.python.org/downloads/
+    echo Por favor instala Python desde la carpeta Utils.
     pause
     exit /b
 )
@@ -37,5 +37,6 @@ REM --- Ejecutar el script principal ---
 python extractor_de_correos.py
 
 pause
+
 
 
